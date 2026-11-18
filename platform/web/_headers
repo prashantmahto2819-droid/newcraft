@@ -1,0 +1,10 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/vector/*.wasm
+  Content-Type: application/wasm
+/photo/*.wasm
+  Content-Type: application/wasm
+/pdf/*.wasm
+  Content-Type: application/wasm

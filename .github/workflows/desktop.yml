@@ -1,0 +1,62 @@
+name: Desktop builds
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths: ["apps/**", ".github/workflows/desktop.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.app }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        app: [vector, photo, pdf, film]
+        include:
+          - { app: vector, pkg: vectorcraft, label: tulika-vector }
+          - { app: photo,  pkg: photocraft,  label: tulika-photo }
+          - { app: pdf,    pkg: pdfcraft,    label: tulika-pdf }
+          - { app: film,   pkg: filmcraft,   label: tulika-film }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/${{ matrix.app }}
+      - name: Linux libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config cmake libx11-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev \
+            libwayland-dev libgl1-mesa-dev libegl1-mesa-dev libvulkan-dev libgtk-3-dev libasound2-dev libudev-dev \
+            libfontconfig1-dev libssl-dev
+      - name: Build (release)
+        working-directory: apps/${{ matrix.app }}
+        run: cargo build --release -p ${{ matrix.pkg }}
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir -p out
+          bin="apps/${{ matrix.app }}/target/release/${{ matrix.pkg }}"
+          [ -f "$bin.exe" ] && bin="$bin.exe"
+          cp "$bin" "out/${{ matrix.label }}-${{ runner.os }}$([ -f "$bin" ] && [ "${bin##*.}" = exe ] && echo .exe)"
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.label }}-${{ runner.os }}
+          path: out/*
+          retention-days: 14
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - uses: softprops/action-gh-release@v2
+        with: { files: "dist/*", generate_release_notes: true }

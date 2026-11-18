@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tulika – रचनात्मक ऐप सूट</title>
+<link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div class="brand">TULIKA<small>तूलिका</small></div>
+  <div id="userbox" class="hidden"><span id="who" class="muted"></span> <button class="ghost" id="logout">बाहर निकलें</button></div>
+</header>
+
+<main>
+  <section id="login" class="panel hidden">
+    <h2 style="margin-top:0">लॉगिन / Sign in</h2>
+    <label for="email">ईमेल</label><input id="email" type="email" autocomplete="email">
+    <label for="pass">पासवर्ड</label><input id="pass" type="password" autocomplete="current-password">
+    <div style="display:flex;gap:10px;margin-top:16px"><button id="signin">लॉगिन</button><button class="ghost" id="signup">नया खाता</button></div>
+    <div class="err" id="err"></div>
+  </section>
+
+  <section id="home" class="hidden">
+    <h2 style="margin-top:0">ऐप खोलें</h2>
+    <div class="grid">
+      <a class="app" style="--c:var(--teal)" href="vector/"><div class="ic" style="background:linear-gradient(#14b8a6,#0f766e)"></div><b>Tulika Vector</b><p>वेक्टर चित्र और लोगो</p></a>
+      <a class="app" style="--c:var(--rose)" href="photo/"><div class="ic" style="background:linear-gradient(#f43f8e,#9d174d)"></div><b>Tulika Photo</b><p>फोटो एडिटिंग, लेयर और मास्क</p></a>
+      <a class="app" style="--c:var(--amber)" href="pdf/"><div class="ic" style="background:linear-gradient(#f59e0b,#b45309)"></div><b>Tulika PDF</b><p>PDF पढ़ना, जोड़ना और साइन करना</p></a>
+      <a class="app" style="--c:var(--violet)" href="https://github.com/prashantmahto2819-droid/newcraft/releases"><div class="ic" style="background:linear-gradient(#8b5cf6,#4c1d95)"></div><b>Tulika Film</b><p>वीडियो एडिटर (डेस्कटॉप ऐप डाउनलोड)</p></a>
+    </div>
+
+    <h2>मेरे प्रोजेक्ट</h2>
+    <table><thead><tr><th>नाम</th><th>ऐप</th><th>अपडेट</th></tr></thead><tbody id="rows"></tbody></table>
+    <p class="muted" id="empty" style="display:none">अभी कोई प्रोजेक्ट नहीं है।</p>
+  </section>
+
+  <section id="setup" class="panel hidden">
+    <h2 style="margin-top:0">Supabase सेटअप बाकी है</h2>
+    <p class="muted"><code>config.js</code> में <code>supabaseUrl</code> और <code>supabaseAnonKey</code> भरिए (देखें <code>config.example.js</code>)।</p>
+  </section>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

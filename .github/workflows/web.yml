@@ -1,0 +1,66 @@
+name: Web build and deploy (Cloudflare Pages)
+on:
+  push:
+    branches: [main]
+    paths: ["apps/**", "platform/web/**", ".github/workflows/web.yml"]
+  workflow_dispatch:
+
+env:
+  TRUNK_VERSION: "0.21.14"
+
+jobs:
+  build:
+    name: web / ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { app: vector, crate: vectorcraft-web }
+          - { app: photo,  crate: photocraft-web }
+          - { app: pdf,    crate: pdfcraft-web }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: wasm32-unknown-unknown }
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: "apps/${{ matrix.app }}" }
+      - name: Install trunk
+        run: |
+          curl --proto '=https' -fsSL "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" | tar -xz
+          sudo mv trunk /usr/local/bin/
+      - name: trunk build
+        working-directory: apps/${{ matrix.app }}/apps/${{ matrix.crate }}
+        run: trunk build --release
+      - name: Check relative URLs
+        run: "! grep -Eq '(src|href)=\"/[^/]' apps/${{ matrix.app }}/dist/web/index.html"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-${{ matrix.app }}
+          path: apps/${{ matrix.app }}/dist/web
+          retention-days: 14
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Assemble site
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          mkdir -p site
+          cp -R platform/web/. site/
+          for a in vector photo pdf; do mkdir -p "site/$a"; cp -R "artifacts/web-$a/." "site/$a/"; done
+          printf 'window.TULIKA_CONFIG = { supabaseUrl: %s, supabaseAnonKey: %s };\n' \
+            "$(printf '%s' "$SUPABASE_URL" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))')" \
+            "$(printf '%s' "$SUPABASE_ANON_KEY" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))')" > site/config.js
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=tulika --branch=main
