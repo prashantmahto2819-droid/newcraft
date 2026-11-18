@@ -1,0 +1,41 @@
+{
+  "id": "vectorcraft",
+  "name": "Tulika Vector",
+  "upgradeCode": "1A5DFCA3-DD55-46B5-AA64-EFB9A5BB6F13",
+  "sources": [
+    "vectorcraft.wxs"
+  ],
+  "icon": "assets/app-icon/vectorcraft.ico",
+  "localization": [
+    "vectorcraft.en-us.wxl"
+  ],
+  "extensions": [
+    "UI",
+    "Util"
+  ],
+  "payloads": [
+    "vectorcraft-cli.exe",
+    "vectorcraft.exe"
+  ],
+  "registry": [
+    [
+      "-1",
+      "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\vectorcraft.exe",
+      "",
+      "[#VectorcraftExe]"
+    ],
+    [
+      "-1",
+      "Software\\Tulika Vector",
+      "InstallDir",
+      "[INSTALLFOLDER]"
+    ],
+    [
+      "-1",
+      "Software\\Tulika Vector",
+      "DesktopShortcut",
+      "#1"
+    ]
+  ],
+  "mode": "dualScope"
+}
