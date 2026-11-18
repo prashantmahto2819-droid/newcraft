@@ -35,3 +35,14 @@ The dashboard lists a user's projects; saving from inside the web apps to Supaba
 The rebrand was done without compiling (package downloads were blocked in the authoring session).
 The first CI run is the real test — fix any compile error it reports before tagging a release.
 Installers (MSI, DMG, Flatpak, AppImage) still use upstream `packaging/` scripts and are not in CI yet.
+
+## CI cost warning
+The first test run (12 desktop builds + 3 web builds, several hours of machine time) used up the GitHub Actions
+quota of the account and further jobs were refused ("recent account payments have failed or your spending limit
+needs to be increased"). Windows minutes count 2x and macOS 10x on private repositories. Therefore the workflows now
+start only manually (default: Linux only) or on a `v*` tag. Fix the billing/spending limit in GitHub → Settings →
+Billing, or make the repository public (Actions are free for public repositories).
+
+Verified in that run: film and pdf compile on Windows, macOS and Linux; vector compiles on Linux and Windows and as
+web (WASM); pdf compiles as web; photo compiles on Linux. Not verified: photo on Windows, vector/photo on macOS,
+photo web (after dropping the wasm-opt `--converge` flag).

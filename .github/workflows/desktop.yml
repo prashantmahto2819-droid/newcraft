@@ -1,10 +1,14 @@
 name: Desktop builds
+# Cost note: on a private repo Windows minutes count 2x and macOS minutes 10x against the Actions quota, and each
+# app takes 45-90 min. So this only runs when you start it by hand (default: Linux only) or push a v* tag (all three).
 on:
   push:
-    branches: [main]
     tags: ["v*"]
-    paths: ["apps/**", ".github/workflows/desktop.yml"]
   workflow_dispatch:
+    inputs:
+      os:
+        description: 'JSON list of runners, e.g. ["ubuntu-latest","windows-latest"]'
+        default: '["ubuntu-latest"]'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -27,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: ${{ fromJSON(github.event_name == 'push' && '["windows-latest","ubuntu-latest","macos-latest"]' || inputs.os) }}
         app: [vector, photo, pdf, film]
         include:
           - { app: vector, pkg: vectorcraft, label: tulika-vector }

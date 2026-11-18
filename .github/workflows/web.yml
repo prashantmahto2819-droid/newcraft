@@ -1,8 +1,6 @@
 name: Web build and deploy (Cloudflare Pages)
+# Starts only by hand (Actions tab -> Run workflow) because the three wasm builds take ~25 min each.
 on:
-  push:
-    branches: [main]
-    paths: ["apps/**", "platform/web/**", ".github/workflows/web.yml"]
   workflow_dispatch:
 
 env:
