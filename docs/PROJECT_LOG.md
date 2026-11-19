@@ -35,3 +35,14 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * Rename binaries (`vectorcraft.exe` -> tulika-vector…) and MSI/DMG/Flatpak packaging in CI — not done.
 * Hindi UI: vector already has `hi.tsv` (machine-assisted draft); photo/pdf/film need catalogs.
 * Replace `in.tulika.*` ids once a domain is owned; trademark search; add shared fonts (Devanagari) and templates.
+
+## 2026-11-19 — Billing fixed, remaining builds verified
+* User fixed GitHub billing. `gh workflow run` does not work from the sandbox (GraphQL blocked): start runs with
+  `gh api -X POST repos/<owner>/<repo>/actions/workflows/<file>/dispatches -f ref=main -f 'inputs[os]=[...]' -f 'inputs[apps]=[...]'`.
+* Both workflows now compute their matrix in a `plan` job (inline `fromJSON` + `include` created extra jobs / broke the
+  run). Inputs: desktop `os` + `apps`, web `apps`.
+* **Verified OK:** vector Windows, macOS, Linux, web; photo macOS, Linux, web (wasm-opt `--converge` removal worked);
+  film and pdf Win/Mac/Linux; pdf web. **Still unknown:** photo Windows (run 44485358380, >90 min and still running —
+  Windows Rust builds of photo are very slow; check the Actions tab).
+* Wasted minutes: one web dispatch built 3 apps instead of 1 because of the old matrix `include` bug (fixed).
+* Next: binary/installer renames (`vectorcraft.exe` -> tulika-vector…), Hindi catalogs for photo/pdf/film, Supabase + Pages secrets (user), trademark search (user).

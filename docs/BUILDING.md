@@ -43,6 +43,4 @@ needs to be increased"). Windows minutes count 2x and macOS 10x on private repos
 start only manually (default: Linux only) or on a `v*` tag. Fix the billing/spending limit in GitHub → Settings →
 Billing, or make the repository public (Actions are free for public repositories).
 
-Verified in that run: film and pdf compile on Windows, macOS and Linux; vector compiles on Linux and Windows and as
-web (WASM); pdf compiles as web; photo compiles on Linux. Not verified: photo on Windows, vector/photo on macOS,
-photo web (after dropping the wasm-opt `--converge` flag).
+Verified (see docs/PROJECT_LOG.md 2026-11-19): all four apps build on Linux and macOS and Windows except photo-on-Windows (unknown); web builds OK for vector, photo, pdf.
