@@ -9,6 +9,9 @@ on:
       os:
         description: 'JSON list of runners, e.g. ["ubuntu-latest","windows-latest"]'
         default: '["ubuntu-latest"]'
+      apps:
+        description: 'JSON list of apps, e.g. ["photo","vector"]'
+        default: '["vector","photo","pdf","film"]'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ${{ fromJSON(github.event_name == 'push' && '["windows-latest","ubuntu-latest","macos-latest"]' || inputs.os) }}
-        app: [vector, photo, pdf, film]
+        app: ${{ fromJSON(inputs.apps || '["vector","photo","pdf","film"]') }}
         include:
           - { app: vector, pkg: vectorcraft, label: tulika-vector }
           - { app: photo,  pkg: photocraft,  label: tulika-photo }

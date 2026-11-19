@@ -2,6 +2,10 @@ name: Web build and deploy (Cloudflare Pages)
 # Starts only by hand (Actions tab -> Run workflow) because the three wasm builds take ~25 min each.
 on:
   workflow_dispatch:
+    inputs:
+      apps:
+        description: 'JSON list: ["vector","photo","pdf"]'
+        default: '["vector","photo","pdf"]'
 
 env:
   CARGO_PROFILE_RELEASE_LTO: "off"
@@ -24,6 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        app: ${{ fromJSON(inputs.apps) }}
         include:
           - { app: vector, crate: vectorcraft-web }
           - { app: photo,  crate: photocraft-web }
