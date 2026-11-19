@@ -22,17 +22,30 @@ concurrency:
 # with the upstream release profile (fat codegen, thin LTO). Final shipping builds can turn LTO back on.
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        env:
+          IN_APPS: ${{ inputs.apps }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          crate = {"vector": "vectorcraft-web", "photo": "photocraft-web", "pdf": "pdfcraft-web"}
+          apps = json.loads(os.environ["IN_APPS"] or json.dumps(list(crate)))
+          inc = [{"app": a, "crate": crate[a]} for a in apps]
+          open(os.environ["GITHUB_OUTPUT"], "a").write("matrix=" + json.dumps({"include": inc}) + "\n")
+          PY
+
   build:
+    needs: plan
     name: web / ${{ matrix.app }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        app: ${{ fromJSON(inputs.apps) }}
-        include:
-          - { app: vector, crate: vectorcraft-web }
-          - { app: photo,  crate: photocraft-web }
-          - { app: pdf,    crate: pdfcraft-web }
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: Free disk space
@@ -71,7 +84,7 @@ jobs:
         run: |
           mkdir -p site
           cp -R platform/web/. site/
-          for a in vector photo pdf; do mkdir -p "site/$a"; cp -R "artifacts/web-$a/." "site/$a/"; done
+          for a in vector photo pdf; do [ -d "artifacts/web-$a" ] && mkdir -p "site/$a" && cp -R "artifacts/web-$a/." "site/$a/"; done; true
           printf 'window.TULIKA_CONFIG = { supabaseUrl: %s, supabaseAnonKey: %s };\n' \
             "$(printf '%s' "$SUPABASE_URL" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))')" \
             "$(printf '%s' "$SUPABASE_ANON_KEY" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))')" > site/config.js
