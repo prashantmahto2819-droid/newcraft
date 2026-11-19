@@ -28,19 +28,36 @@ env:
   CARGO_NET_RETRY: "5"
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        env:
+          EVENT: ${{ github.event_name }}
+          IN_OS: ${{ inputs.os }}
+          IN_APPS: ${{ inputs.apps }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          pk = {"vector": "vectorcraft", "photo": "photocraft", "pdf": "pdfcraft", "film": "filmcraft"}
+          push = os.environ["EVENT"] == "push"
+          oses = ["windows-latest", "ubuntu-latest", "macos-latest"] if push else json.loads(os.environ["IN_OS"] or '["ubuntu-latest"]')
+          apps = list(pk) if push else json.loads(os.environ["IN_APPS"] or json.dumps(list(pk)))
+          inc = [{"os": o, "app": a, "pkg": pk[a], "label": "tulika-" + a} for o in oses for a in apps]
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write("matrix=" + json.dumps({"include": inc}) + "\n")
+          print(inc)
+          PY
+
   build:
+    needs: plan
     name: ${{ matrix.app }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        os: ${{ fromJSON(github.event_name == 'push' && '["windows-latest","ubuntu-latest","macos-latest"]' || inputs.os) }}
-        app: ${{ fromJSON(inputs.apps || '["vector","photo","pdf","film"]') }}
-        include:
-          - { app: vector, pkg: vectorcraft, label: tulika-vector }
-          - { app: photo,  pkg: photocraft,  label: tulika-photo }
-          - { app: pdf,    pkg: pdfcraft,    label: tulika-pdf }
-          - { app: film,   pkg: filmcraft,   label: tulika-film }
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: Free disk space (Linux)
