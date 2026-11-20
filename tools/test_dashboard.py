@@ -50,7 +50,7 @@ with sync_playwright() as p:
     def grab(sel=".tool .btnrow .primary"):
         with pg.expect_download() as d: pg.click(sel)
         return d.value.path()
-    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 28, "tools: 28 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
+    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 29, "tools: 29 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
     tool("kruti"); pg.fill("textarea >> nth=0", "fgUnh Hkkjr dk;kZy;"); ok(pg.input_value("textarea >> nth=1") == "हिन्दी भारत कार्यालय", "kruti conversion in UI")
     tool("words"); pg.fill("input[inputmode=decimal]", "123456.50"); ok("एक लाख तेईस हज़ार चार सौ छप्पन रुपये और पचास पैसे मात्र" == pg.input_value("textarea >> nth=0") and pg.input_value("textarea >> nth=1").startswith("One Lakh Twenty Three Thousand"), "rupees in words hi+en")
     tool("size"); ok("182.88" in pg.inner_text(".tool"), "size calc 6x3 ft -> cm")
@@ -162,6 +162,10 @@ with sync_playwright() as p:
     tool("convert"); choose(two, "text=/Choose photos|फ़ोटो चुनिए/"); wf = grab(".tool .btnrow .primary"); ok(Image.open(wf).format == "WEBP" and Image.open(wf).size == (200, 100), "convert to WebP keeps size")
     tool("collage"); choose([two, two, two, two], "text=/Choose photos|फ़ोटो चुनिए/"); cp_ = grab(".tool .btnrow .primary"); ci = Image.open(cp_).convert("RGB"); ok(ci.size[0] == 1080 and ci.size[1] > 1000, "collage 2x2 size " + str(ci.size))
     tool("resume"); pg.fill(".tool input >> nth=0", "प्रशांत महतो"); pg.fill(".tool textarea >> nth=0", "दस साल का अनुभव"); rp = grab(".tool .btnrow .primary"); rr_ = PdfReader(rp); ok(len(rr_.pages) == 1 and abs(float(rr_.pages[0].mediabox.height) - 841.89) < 1, "resume PDF is one A4 page")
+    # ---- Hindi typing
+    tr = pg.evaluate("""async () => { const m = await import('./js/tools/translit.js'); return ['namaste','bhaarat','hindii','shubhakaamanaaeM','prashaaMt','mitra','gyaan','kyaa haal hai','{Hello} duniyaa','kRRiShNa'].map(x => m.romanToDevanagari(x)); }""")
+    ok(tr == ["नमस्ते", "भारत", "हिन्दी", "शुभकामनाएं", "प्रशांत", "मित्र", "ज्ञान", "क्या हाल है", "Hello दुनिया", "कृष्ण"], "transliteration samples: " + str(tr))
+    tool("typing"); pg.fill(".tool textarea >> nth=0", "namaste bhaarat"); ok(pg.locator(".tool textarea").nth(1).input_value() == "नमस्ते भारत", "typing tool converts live")
     # ---- cloud mode (mock supabase)
     c = b.new_page(viewport={"width": 390, "height": 780}); c.on("pageerror", lambda e: errs.append(str(e)))
     c.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))

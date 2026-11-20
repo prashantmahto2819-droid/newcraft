@@ -8,6 +8,7 @@ import { pdfMerge, pdfOrganize, pdfCompress, pdfToImages, loadLib, readBuf } fro
 import { barcodeTool, cardTool } from "./tools_card.js";
 import { invoiceTool, pdfStamp } from "./tools_biz.js";
 import { ocrTool } from "./tools_ocr.js";
+import { romanToDevanagari } from "../tools/translit.js";
 import { greetingTool } from "./tools_greet.js";
 import { aiTool } from "./tools_ai.js";
 import { paletteTool, iconPackTool, convertTool, collageTool, resumeTool } from "./tools_more.js";
@@ -141,6 +142,7 @@ const TOOLS = [
   { id: "convert", cat: "photo", icon: "download", c: "#10b981", hi: "फ़ॉर्मेट बदलें + EXIF/लोकेशन हटाएँ", en: "Convert format + strip EXIF", dh: "WebP / JPG / PNG, कई फ़ोटो", de: "WebP / JPG / PNG, many photos", view: convertTool },
   { id: "collage", cat: "photo", icon: "image", c: "#ec4899", hi: "फ़ोटो कोलाज", en: "Photo collage", dh: "2–9 फ़ोटो, ग्रिड", de: "2–9 photos, grid", view: collageTool },
   { id: "resume", cat: "india", icon: "edit", c: "#0f766e", hi: "रिज़्यूमे / बायोडाटा", en: "Resume / biodata", dh: "हिंदी या English, A4 PDF", de: "Hindi or English, A4 PDF", view: resumeTool },
+  { id: "typing", cat: "india", icon: "edit", c: "#9333ea", hi: "हिंदी टाइपिंग (Roman → देवनागरी)", en: "Hindi typing (Roman → Devanagari)", dh: "namaste → नमस्ते, कॉपी करें", de: "namaste → नमस्ते, copy", view: () => typingTool() },
   { id: "aitext", cat: "india", icon: "wand", c: "#2563eb", hi: "AI लेखक (Gemini)", en: "AI writer (Gemini)", dh: "शुभकामना, कैप्शन, OCR सुधार, अनुवाद", de: "Greetings, captions, OCR fix, translate", view: aiTool },
   { id: "greet", cat: "india", icon: "wand", c: "#e11d48", hi: "शुभकामना / पोस्टर मेकर", en: "Greeting / poster maker", dh: "22 सजावटी हिंदी फ़ॉन्ट, 8 बैकग्राउंड", de: "22 decorative Hindi fonts, 8 backgrounds", view: greetingTool },
   { id: "ocr", cat: "india", icon: "wand", c: "#7c3aed", hi: "फ़ोटो / स्कैन से टेक्स्ट (हिंदी OCR)", en: "Text from photo / scan (Hindi OCR)", dh: "हिंदी + English, ब्राउज़र में ही", de: "Hindi + English, in your browser", view: ocrTool },
@@ -170,4 +172,13 @@ export async function render(ctx) {
     CATS.map(([k, hi, en]) => h("section", h("h2.cat", L(hi, en)), h("div.tiles", TOOLS.filter((x) => x.cat === k).map((x) => h("a.tile", { style: { "--c": x.c }, href: "#/tools/" + x.id }, h("span.appicon", { style: { width: "42px", height: "42px", background: x.c } }, icon(x.icon, 24)), h("b", L(x.hi, x.en)), h("small", L(x.dh, x.de)), x.beta ? h("span.badge.warn", "BETA") : h("span.badge", L("ऑफ़लाइन", "Offline"))))))),
     h("section", h("h2.cat", L("बाहर के ओपन-सोर्स टूल", "Open-source tools outside Tulika")), h("p.sub", L("ये अलग ऐप हैं (हमारे कोड में शामिल नहीं), इसलिए लाइसेंस की दिक्कत नहीं। इन्हें साथ में इस्तेमाल कीजिए।", "Separate apps (not part of our code), so no licence mixing. Use them alongside Tulika.")),
       h("div.tgrid", EXT.map(([n, lic, url, d]) => h("a.tpl", { href: url, target: "_blank", rel: "noopener" }, h("b", n), h("small", d), h("span.badge", lic), h("span.apptag", icon("ext", 14), url.replace("https://", "")))))));
+}
+
+function typingTool() {
+  const a = h("textarea", { rows: 5, placeholder: "namaste, aap kaise hain?", autofocus: true }), b = h("textarea", { rows: 5, readonly: true }); let dg = false;
+  const upd = () => { b.value = romanToDevanagari(a.value, { digits: dg }); }; a.oninput = upd;
+  return h("div.form", h("p.sub", getLang() === "hi" ? "अंग्रेज़ी अक्षरों में लिखिए, हिंदी बनती जाएगी। aa=ा, ii/ee=ी, uu/oo=ू, M=ं, MM=ँ, H=ः, T D N = ट ड ण, Sh=ष, R=ड़, { } में लिखा जैसा है वैसा रहेगा। संयुक्ताक्षर: kya = क्या; अलग रखने के लिए a लिखिए: shubhakaamanaa = शुभकामना।" : "Type in English letters, Hindi appears. aa=ा, ii/ee=ी, uu/oo=ू, M=ं, MM=ँ, H=ः, T D N = ट ड ण, Sh=ष, R=ड़, text in { } stays as typed. Conjunct: kya = क्या; write the a to keep letters apart: shubhakaamanaa = शुभकामना."),
+    h("label.fld", h("span", "Roman"), a), h("label.fld", h("span", "देवनागरी"), b),
+    h("label.fld", h("span", getLang() === "hi" ? "अंक देवनागरी में" : "Devanagari digits"), h("input", { type: "checkbox", onchange: (e) => { dg = e.target.checked; upd(); } })),
+    h("button.ghost", { onclick: async () => { try { await navigator.clipboard.writeText(b.value); toast(getLang() === "hi" ? "कॉपी हो गया" : "Copied"); } catch { b.select(); } } }, icon("copy", 16), getLang() === "hi" ? "कॉपी" : "Copy"));
 }

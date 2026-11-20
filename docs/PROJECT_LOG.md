@@ -108,3 +108,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-20 (night 6) — Tools v5: 28 tools
 * Added colour palette, icon/favicon pack, format convert + EXIF strip, collage, resume maker (`js/views/tools_more.js`). Tests 69/69.
+
+## 2026-11-20 (night 7) — Hindi typing tool (29 tools)
+* `js/tools/translit.js`: Roman -> Devanagari phonetic typing, ITRANS-like (a between consonants keeps them apart). Tests 71/71.

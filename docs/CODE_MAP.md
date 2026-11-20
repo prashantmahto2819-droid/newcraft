@@ -73,3 +73,4 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 * OCR: `js/views/tools_ocr.js` + `vendor/ocr/` (worker, wasm cores, hin/eng models). Fonts: `vendor/fonts/` via `@font-face` at the top of `css/styles.css`.
 * Poster maker: `js/views/tools_greet.js`, fonts list `js/data/deco_fonts.js`, font files `vendor/fonts/deco/`. AI: `js/views/tools_ai.js`, `platform/supabase/functions/ai-text/`, see `docs/AI.md`.
 * More tools: `js/views/tools_more.js` (`paletteOf`, `makeIco`, convert, collage, `drawResume`).
+* Hindi typing: `js/tools/translit.js` (+ `typingTool` at the end of `js/views/tools.js`).
