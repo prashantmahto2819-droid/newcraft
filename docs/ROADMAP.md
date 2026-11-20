@@ -35,7 +35,8 @@ licences (BRIA RMBG-1.4 is non-commercial; rembg code is MIT) — check each mod
 | Module | Replaces | How | Status |
 |---|---|---|---|
 | Tools page, 12 tools: background remover, enhancer, upscale, compressor (+under-KB), crop/presets, watermark, passport sheet, images→PDF, QR (URL/UPI/WhatsApp/Wi-Fi), Kruti→Unicode, rupees in words, print-size calc | misc. | pure JS, offline | **done 2026-11-20** (tested: tools/test_dashboard.py) |
-| Tools next: PDF merge/split/compress (needs pdf-lib vendored; no npm in sandbox), OCR Hindi (tesseract.js), AI upscale/enhance (ONNX), Hindi subtitles (whisper.cpp), barcode (Code128/EAN), ID/visiting-card generator, vendor transformers.js locally for the AI bg-remove (today loaded from esm.sh) | | JS/WASM in dashboard | next |
+| Tools v3, 18 tools: PDF merge / organise (extract, delete, rotate, split→ZIP, page numbers) / compress (light+strong) / PDF→images, barcode (Code128, EAN-13), visiting + ID card generator (PNG/PDF/A4 sheet); pdf-lib + pdfjs vendored in `platform/web/vendor/` | misc. | pure JS, offline | **done 2026-11-20** (tested) |
+| Tools next: OCR Hindi (tesseract.js), AI upscale/enhance (ONNX), Hindi subtitles (whisper.cpp), vendor transformers.js locally for the AI bg-remove (today loaded from esm.sh) | | JS/WASM in dashboard | next |
 | Tulika Layout (multi-page DTP: CMYK, bleed, crop marks, print PDF) | InDesign / PageMaker | new Rust app or mode of Vector; Scribus only as reference | planned, biggest market |
 | Tulika Audio | Audition / Audacity | Rust: cpal + symphonia + rubato + hound | planned |
 | Tulika Motion (text/shape animation, lower thirds) | After Effects (lite) | extend Film | planned |

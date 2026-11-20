@@ -21,6 +21,9 @@ export async function downloadFile(ctx, p) {
 export function pickFile(accept, cb) {
   const i = h("input", { type: "file", accept, style: { display: "none" }, onchange: () => i.files[0] && cb(i.files[0]) }); document.body.append(i); i.click(); setTimeout(() => i.remove(), 60000);
 }
+export function pickFiles(accept, cb) {
+  const i = h("input", { type: "file", accept, multiple: true, style: { display: "none" }, onchange: () => i.files.length && cb([...i.files]) }); document.body.append(i); i.click(); setTimeout(() => i.remove(), 60000);
+}
 export async function guard(fn) { try { return await fn(); } catch (e) { console.error(e); toast(e?.message === "too_big_demo" ? t("too_big_demo") : t("error") + (e?.message ? `: ${e.message}` : ""), "err"); } }
 
 export function projectMenu(ctx, p, anchor) {

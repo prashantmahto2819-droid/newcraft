@@ -10,9 +10,9 @@ import { pickFile } from "./shared.js";
 export const L = (hi, en) => (getLang() === "hi" ? hi : en);
 const MAXPX = 2400;
 export const field = (label, el) => h("label.fld", h("span", label), el);
-const note = (t) => h("p.sub", t);
-const sel = (opts, v, f) => h("select", { onchange: (e) => f(e.target.value) }, opts.map(([k, l]) => h("option", { value: k, selected: String(k) === String(v) }, l)));
-const textIn = (v, f, o = {}) => h("input", { value: v, oninput: (e) => f(e.target.value), ...o });
+export const note = (t) => h("p.sub", t);
+export const sel = (opts, v, f) => h("select", { onchange: (e) => f(e.target.value) }, opts.map(([k, l]) => h("option", { value: k, selected: String(k) === String(v) }, l)));
+export const textIn = (v, f, o = {}) => h("input", { value: v, oninput: (e) => f(e.target.value), ...o });
 
 // Generic single-image workbench: pick image -> controls -> live preview -> download.
 function workbench({ init, controls, render, help, onClick }) {

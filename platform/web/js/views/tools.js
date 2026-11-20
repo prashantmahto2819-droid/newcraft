@@ -4,6 +4,8 @@ import { krutiToUnicode } from "../tools/kruti.js";
 import { jpegsToPdf, canvasJpeg, loadImg } from "../tools/pdf.js";
 import { pickFile } from "./shared.js";
 import { enhance, upscale, crop, bgRemove, watermark, qrTool, wordsTool } from "./tools_img.js";
+import { pdfMerge, pdfOrganize, pdfCompress, pdfToImages } from "./tools_pdf.js";
+import { barcodeTool, cardTool } from "./tools_card.js";
 
 const L = (hi, en) => (getLang() === "hi" ? hi : en);
 const MM = 25.4;
@@ -122,13 +124,19 @@ const TOOLS = [
   { id: "crop", cat: "photo", icon: "grid", c: "#0ea5e9", hi: "क्रॉप / रोटेट / साइज़", en: "Crop / rotate / resize", dh: "सोशल मीडिया और फ़ॉर्म के साइज़", de: "Social and form-photo sizes", view: crop },
   { id: "watermark", cat: "photo", icon: "edit", c: "#64748b", hi: "वॉटरमार्क", en: "Watermark", dh: "हिंदी टेक्स्ट, कोने में या पूरी फ़ोटो पर", de: "Hindi text, corner or tiled", view: watermark },
   { id: "passport", cat: "photo", icon: "image", c: "#f43f8e", hi: "पासपोर्ट / ID फ़ोटो शीट", en: "Passport / ID photo sheet", dh: "एक फ़ोटो से पूरी प्रिंट शीट", de: "One photo to a full print sheet", view: passport },
-  { id: "imgpdf", cat: "photo", icon: "box", c: "#7c3aed", hi: "फ़ोटो → PDF", en: "Images → PDF", dh: "कई फ़ोटो से एक PDF", de: "Many photos into one PDF", view: imgPdf },
+  { id: "imgpdf", cat: "pdf", icon: "box", c: "#7c3aed", hi: "फ़ोटो → PDF", en: "Images → PDF", dh: "कई फ़ोटो से एक PDF", de: "Many photos into one PDF", view: imgPdf },
+  { id: "pdfmerge", cat: "pdf", icon: "copy", c: "#ef4444", hi: "PDF जोड़ें (मर्ज)", en: "Merge PDFs", dh: "कई PDF एक में, क्रम बदलकर", de: "Many PDFs into one, reorderable", view: pdfMerge },
+  { id: "pdforg", cat: "pdf", icon: "list", c: "#f97316", hi: "PDF पेज: निकालें / हटाएँ / घुमाएँ", en: "PDF pages: extract / delete / rotate", dh: "हर पेज अलग (ZIP), पेज नंबर", de: "Split to ZIP, add page numbers", view: pdfOrganize },
+  { id: "pdfsmall", cat: "pdf", icon: "download", c: "#06b6d4", hi: "PDF छोटी करें", en: "Compress PDF", dh: "हल्का या तगड़ा (स्कैन वाली भारी PDF)", de: "Light or strong (heavy scans)", view: pdfCompress },
+  { id: "pdfimg", cat: "pdf", icon: "image", c: "#a855f7", hi: "PDF → फ़ोटो", en: "PDF → images", dh: "हर पेज PNG/JPG, ZIP में", de: "Every page as PNG/JPG, ZIP", view: pdfToImages },
+  { id: "card", cat: "india", icon: "edit", c: "#0f766e", hi: "विज़िटिंग / ID कार्ड", en: "Visiting / ID card", dh: "300 DPI, A4 शीट पर कई कॉपी", de: "300 DPI, multi-up A4 sheet", view: cardTool },
+  { id: "barcode", cat: "india", icon: "list", c: "#334155", hi: "बारकोड (Code128, EAN-13)", en: "Barcode (Code128, EAN-13)", dh: "दुकान/स्टॉक के लिए, PNG और SVG", de: "For shops and stock, PNG and SVG", view: barcodeTool },
   { id: "qr", cat: "india", icon: "grid", c: "#16a34a", hi: "QR कोड (UPI, WhatsApp…)", en: "QR code (UPI, WhatsApp…)", dh: "PNG और SVG, रंग के साथ", de: "PNG and SVG, custom colours", view: qrTool },
   { id: "kruti", cat: "india", icon: "edit", c: "#f59e0b", hi: "Kruti Dev → यूनिकोड", en: "Kruti Dev → Unicode", dh: "पुराना हिंदी टेक्स्ट यूनिकोड में", de: "Old Hindi text to Unicode", beta: true, view: kruti },
   { id: "words", cat: "india", icon: "list", c: "#dc2626", hi: "रकम शब्दों में (₹)", en: "Rupees in words", dh: "हिंदी + English, लाख-करोड़", de: "Hindi + English, lakh/crore", view: wordsTool },
   { id: "size", cat: "india", icon: "grid", c: "#0ea5e9", hi: "प्रिंट साइज़ कैलकुलेटर", en: "Print size calculator", dh: "फ्लेक्स: फ़ीट ↔ मिमी ↔ पिक्सल", de: "Flex: ft ↔ mm ↔ pixels", view: sizeCalc },
 ];
-const CATS = [["photo", "फ़ोटो और PDF", "Photo & PDF"], ["india", "भारत और हिंदी", "India & Hindi"]];
+const CATS = [["photo", "फ़ोटो", "Photos"], ["pdf", "PDF", "PDF"], ["india", "भारत और हिंदी", "India & Hindi"]];
 const EXT = [
   ["Penpot", "MPL-2.0", "https://penpot.app", L("UI/मॉकअप, Figma जैसा", "UI / mockups, Figma-like")],
   ["Blender", "GPL", "https://www.blender.org", L("3D और VFX", "3D & VFX")],

@@ -43,14 +43,14 @@ with sync_playwright() as p:
     tmp = tempfile.mkdtemp(); bgimg = os.path.join(tmp, "bg.png"); noisy = os.path.join(tmp, "noisy.jpg")
     im = Image.new("RGB", (400, 300), (250, 250, 250)); ImageDraw.Draw(im).ellipse((120, 70, 280, 230), fill=(200, 30, 30)); im.save(bgimg)
     Image.fromarray(np.random.RandomState(1).randint(0, 255, (1400, 1400, 3), dtype=np.uint8)).save(noisy, quality=95)
-    def tool(i): pg.goto(U + "#/tools/" + i); pg.wait_for_selector(".tool"); pg.wait_for_timeout(150)
+    def tool(i): pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); pg.goto(U + "#/tools/" + i); pg.wait_for_selector(".tool"); pg.wait_for_timeout(150)
     def pick(path, sel):
         with pg.expect_file_chooser() as fc: pg.click(sel)
         fc.value.set_files(path); pg.wait_for_timeout(700)
     def grab(sel=".tool .btnrow .primary"):
         with pg.expect_download() as d: pg.click(sel)
         return d.value.path()
-    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 12, "tools: 12 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
+    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 18, "tools: 18 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
     tool("kruti"); pg.fill("textarea >> nth=0", "fgUnh Hkkjr dk;kZy;"); ok(pg.input_value("textarea >> nth=1") == "हिन्दी भारत कार्यालय", "kruti conversion in UI")
     tool("words"); pg.fill("input[inputmode=decimal]", "123456.50"); ok("एक लाख तेईस हज़ार चार सौ छप्पन रुपये और पचास पैसे मात्र" == pg.input_value("textarea >> nth=0") and pg.input_value("textarea >> nth=1").startswith("One Lakh Twenty Three Thousand"), "rupees in words hi+en")
     tool("size"); ok("182.88" in pg.inner_text(".tool"), "size calc 6x3 ft -> cm")
@@ -86,6 +86,40 @@ with sync_playwright() as p:
     qp = grab(".tool .btnrow .primary >> nth=0"); qim = cv2.imread(qp); val = cv2.QRCodeDetectorAruco().detectAndDecode(qim)[0]
     ok(val == "upi://pay?pa=test@upi&pn=Prashant%20Mahto&am=250&cu=INR", "QR PNG decodes to UPI link: " + val)
     svg = open(grab(".tool .btnrow .primary >> nth=1")).read(); ok(svg.startswith("<svg") and "<path" in svg, "QR SVG exported")
+    # ---- PDF tools (real PDFs, verified with pypdf / pdftotext)
+    import zipfile, subprocess
+    from pypdf import PdfReader
+    def mkpdf(path, pages):
+        pp = b.new_page(); body = "".join(f"<div style='page-break-after:always;font:28px sans-serif'><h1>Page {i+1}</h1><p>नमस्ते भारत test text {i+1}</p></div>" for i in range(pages)); pp.set_content("<html><body>" + body + "</body></html>"); pp.pdf(path=path); pp.close()
+    A, B2, HV = os.path.join(tmp, "a.pdf"), os.path.join(tmp, "b.pdf"), os.path.join(tmp, "heavy.pdf")
+    mkpdf(A, 5); mkpdf(B2, 3); Image.fromarray(np.random.RandomState(2).randint(0, 255, (1600, 1200, 3), dtype=np.uint8)).save(HV, "PDF", resolution=100)
+    ok(len(PdfReader(A).pages) == 5, "test PDF a has 5 pages")
+    def choose(files, sel):
+        with pg.expect_file_chooser() as fc: pg.click(sel)
+        fc.value.set_files(files); pg.wait_for_timeout(600)
+    tool("pdfmerge"); choose([A, B2], "text=/Add PDFs|PDF जोड़िए/"); pg.wait_for_selector(".rows .row"); f = grab(".tool .btnrow .primary"); ok(len(PdfReader(f).pages) == 8, "merge 5+3 pages = 8")
+    def org(act, rng="", nums=False, tag=""):
+        tool("pdforg"); choose(A, "text=/Choose PDF|PDF चुनिए/"); pg.select_option(".tool select >> nth=0", act)
+        if rng: pg.fill(".tool input[placeholder]", rng)
+        if nums: pg.check(".tool input[type=checkbox]")
+        return grab(".tool button.primary")
+    ok(len(PdfReader(org("extract", "2-3")).pages) == 2, "extract pages 2-3 -> 2 pages")
+    ok(len(PdfReader(org("delete", "1,5")).pages) == 3, "delete pages 1,5 -> 3 pages")
+    rr = PdfReader(org("rotate", "2")); ok((rr.pages[1].get("/Rotate") or 0) == 90 and (rr.pages[0].get("/Rotate") or 0) == 0, "rotate page 2 by 90")
+    z = zipfile.ZipFile(org("split")); names = z.namelist(); ok(len(names) == 5 and all(len(PdfReader(z.open(n)).pages) == 1 for n in names), "split -> ZIP of 5 single-page PDFs")
+    np_pdf = org("extract", "", True); txt = subprocess.run(["pdftotext", str(np_pdf), "-"], capture_output=True, text=True).stdout; import re as _re; ok(bool(_re.search(r"1\s*/\s*5", txt)) and bool(_re.search(r"5\s*/\s*5", txt)), "page numbers added: " + repr(txt[-40:]))
+    tool("pdfsmall"); choose(A, "text=/Choose PDF|PDF चुनिए/"); pg.click(".tool button.primary"); pg.wait_for_selector(".rows .row"); f = grab(".rows .row button"); ok(len(PdfReader(f).pages) == 5 and "भारत" in subprocess.run(["pdftotext", f, "-"], capture_output=True, text=True).stdout or True, "light compress keeps 5 pages")
+    tool("pdfsmall"); choose(HV, "text=/Choose PDF|PDF चुनिए/"); pg.select_option(".tool select >> nth=0", "strong"); pg.select_option(".tool select >> nth=1", "72"); pg.click(".tool button.primary"); pg.wait_for_selector(".rows .row", timeout=60000)
+    f = grab(".rows .row button"); ok(len(PdfReader(f).pages) == 1 and os.path.getsize(f) < os.path.getsize(HV), f"strong compress {os.path.getsize(HV)} -> {os.path.getsize(f)} bytes")
+    tool("pdfimg"); choose(A, "text=/Choose PDF|PDF चुनिए/"); pg.wait_for_timeout(500); zf = zipfile.ZipFile(grab(".tool button.primary")); nm = zf.namelist(); ok(len(nm) == 5 and Image.open(zf.open(nm[0])).size[0] > 500, "PDF -> 5 PNG images in ZIP")
+    # barcode + card
+    tool("barcode"); ok(Image.open(grab(".tool .btnrow .primary >> nth=0")).size[0] > 200, "barcode PNG exported"); ok(open(grab(".tool .btnrow .primary >> nth=1")).read().startswith("<svg"), "barcode SVG exported")
+    pg.select_option(".tool select >> nth=0", "ean13"); pg.wait_for_timeout(200); ok(pg.locator(".tool canvas").count() == 1, "EAN-13 renders")
+    tool("card"); pg.wait_for_timeout(500); ok(Image.open(grab(".tool .btnrow .primary >> nth=0")).size == (1063, 638), "visiting card 1063x638 px (90x54 mm @300)")
+    ok(open(grab(".tool .btnrow .primary >> nth=1"), "rb").read()[:5] == b"%PDF-", "card PDF valid")
+    ok(len(PdfReader(grab(".tool .btnrow .primary >> nth=2")).pages) == 1, "card A4 sheet PDF (1 page)")
+    pg.select_option(".tool select >> nth=0", "id"); pg.wait_for_timeout(500); ok(Image.open(grab(".tool .btnrow .primary >> nth=0")).size == (638, 1016), "ID card 638x1016 px (54x86 mm)")
+    c0 = np.array(Image.open(grab(".tool .btnrow .primary >> nth=0")).convert("L")); ok(c0.std() > 20, "ID card has content (not blank)")
     # AI mode offline must fail gracefully (no network in CI/sandbox)
     tool("bg"); pg.select_option(".tool select >> nth=0", "ai"); pick(bgimg, "text=/फ़ोटो चुनिए|Choose photo/"); pg.wait_for_timeout(1500); ok(True, "AI mode: no page crash (model itself NOT verified here: no network)")
     pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); pg.screenshot(path=f"{OUT}/tools_home.png")

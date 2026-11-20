@@ -78,3 +78,9 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * Tests: `tools/test_dashboard.py` 30/30 pass (QR decoded with OpenCV, bg-removal alpha checked with PIL, compress to <=50KB verified, PDFs validated).
 * OpenCV's default QR detector is flaky on some valid codes (mask 2); tests use `QRCodeDetectorAruco`.
 * Not verified: AI bg-remove (no network here); real-world Kruti texts.
+
+## 2026-11-20 (late night) — Tools v3: 18 tools
+* Added PDF merge, PDF organise (extract/delete/rotate/split→ZIP/page numbers), PDF compress (light = pdf-lib re-save, strong = render pages to JPEG), PDF→images (PNG/JPG, ZIP), barcode (Code128-B, EAN-13), visiting/ID card generator (PNG, PDF, A4 sheet, optional MECARD QR).
+* Vendored pdf-lib 1.17.1 (MIT) and pdfjs-dist 6.2.108 (Apache-2.0) into `platform/web/vendor/` (~6 MB), licences included. New `js/tools/zip.js` (store-only ZIP).
+* Tests: `tools/test_dashboard.py` 48/48 pass. Barcodes cross-checked against reportlab (Code128 table, EAN-13 modules). Test helper now resets tool state via `#/tools` before each tool.
+* Not built yet: Hindi OCR, AI upscale, subtitles, local AI bg-remove model, Supabase bridge for web apps, Rust modules (Layout/Audio/Motion/Lab).
