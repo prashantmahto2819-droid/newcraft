@@ -57,3 +57,8 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * Migration `0002_projects_upgrade.sql` adds `projects.favorite` and `projects.meta` — **user must run it in Supabase SQL editor**.
 * Tested with Playwright/Chromium in demo mode (desktop + mobile screenshots, no JS errors). Cloud mode untested (needs real Supabase).
 * Not done: web apps (WASM) still cannot open/save projects from Supabase (JS bridge); the dashboard's "open" just launches the app with `?project=<id>`.
+
+## 2026-11-20 (later) — Packaging, tests, roadmap
+* `desktop.yml` Collect step now packages each build as `tulika-<app>-<OS>.zip` (Windows) / `.tar.gz` (Linux, macOS) with NOTICE + licences, so the exec bit survives. **[ci] not yet run** — check on the next desktop run.
+* Added `tools/test_dashboard.py` (Playwright; demo mode + mocked Supabase CloudStore: login, create, list, kits, shortcuts) — all pass.
+* Added `docs/ROADMAP.md` with the ordered list of remaining work.

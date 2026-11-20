@@ -80,10 +80,18 @@ jobs:
       - name: Collect
         shell: bash
         run: |
-          mkdir -p out
+          # Package as zip (Windows) or tar.gz (Linux/macOS) so the executable bit survives download.
           bin="apps/${{ matrix.app }}/target/release/${{ matrix.pkg }}"
           [ -f "$bin.exe" ] && bin="$bin.exe"
-          cp "$bin" "out/${{ matrix.label }}-${{ runner.os }}$([ -f "$bin" ] && [ "${bin##*.}" = exe ] && echo .exe)"
+          name="${{ matrix.label }}-${{ runner.os }}"
+          mkdir -p "pkg/$name" out
+          cp "$bin" "pkg/$name/"
+          cp NOTICE LICENSE-MIT LICENSE-APACHE "pkg/$name/"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            (cd pkg && 7z a -tzip "../out/$name.zip" "$name" >/dev/null)
+          else
+            tar -C pkg -czf "out/$name.tar.gz" "$name"
+          fi
           ls -la out
       - uses: actions/upload-artifact@v4
         with:
