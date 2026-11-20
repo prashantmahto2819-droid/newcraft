@@ -50,7 +50,7 @@ with sync_playwright() as p:
     def grab(sel=".tool .btnrow .primary"):
         with pg.expect_download() as d: pg.click(sel)
         return d.value.path()
-    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 30, "tools: 30 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
+    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 32, "tools: 32 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
     tool("kruti"); pg.fill("textarea >> nth=0", "fgUnh Hkkjr dk;kZy;"); ok(pg.input_value("textarea >> nth=1") == "हिन्दी भारत कार्यालय", "kruti conversion in UI")
     tool("words"); pg.fill("input[inputmode=decimal]", "123456.50"); ok("एक लाख तेईस हज़ार चार सौ छप्पन रुपये और पचास पैसे मात्र" == pg.input_value("textarea >> nth=0") and pg.input_value("textarea >> nth=1").startswith("One Lakh Twenty Three Thousand"), "rupees in words hi+en")
     tool("size"); ok("182.88" in pg.inner_text(".tool"), "size calc 6x3 ft -> cm")
@@ -175,6 +175,12 @@ with sync_playwright() as p:
     simg = sr2.pages[0].images[0].image.convert("L"); sa = np.array(simg); left = sa[:, : int(sa.shape[1] * 0.07)]; right = sa[:, -int(sa.shape[1] * 0.07) :]
     ok(np.mean(left > 200) > 0.85 and np.mean(right > 200) > 0.85, "scan: paper is white on both the bright and the shadowed side (%.2f / %.2f)" % (np.mean(left > 200), np.mean(right > 200)))
     ok(np.mean(sa < 60) > 0.08, "scan: text strokes are kept (dark share %.3f)" % np.mean(sa < 60))
+    # ---- form photo (px + KB) and certificate
+    nz = os.path.join(tmp, "face.jpg"); Image.fromarray(np.random.RandomState(5).randint(0, 255, (900, 700, 3), dtype=np.uint8)).save(nz, quality=95)
+    tool("formphoto"); choose(nz, "text=/Choose photo|फ़ोटो चुनिए/"); fp_ = grab(".tool .btnrow .primary"); fi_ = Image.open(fp_); ok(fi_.size == (200, 230) and os.path.getsize(fp_) <= 50 * 1024, "form photo 200x230, <=50KB: %s %d B" % (fi_.size, os.path.getsize(fp_)))
+    tool("formphoto"); pg.select_option(".tool select >> nth=0", "sign"); choose(nz, "text=/Choose photo|फ़ोटो चुनिए/"); fs_ = grab(".tool .btnrow .primary"); ok(Image.open(fs_).size == (140, 60) and os.path.getsize(fs_) <= 20 * 1024, "signature 140x60, <=20KB: %d B" % os.path.getsize(fs_))
+    tool("certificate"); pg.wait_for_timeout(1200); pg.fill(".tool .grid2 input >> nth=1", "प्रशांत महतो"); cr = PdfReader(grab(".tool .btnrow .primary >> nth=0")); ok(len(cr.pages) == 1 and abs(float(cr.pages[0].mediabox.width) - 841.89) < 1, "certificate PDF is A4 landscape")
+    ok(Image.open(grab(".tool .btnrow .primary >> nth=1")).size == (3508, 2480), "certificate PNG 3508x2480")
     # ---- cloud mode (mock supabase)
     c = b.new_page(viewport={"width": 390, "height": 780}); c.on("pageerror", lambda e: errs.append(str(e)))
     c.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))

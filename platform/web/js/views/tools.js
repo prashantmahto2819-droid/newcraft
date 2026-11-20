@@ -8,6 +8,7 @@ import { pdfMerge, pdfOrganize, pdfCompress, pdfToImages, loadLib, readBuf } fro
 import { barcodeTool, cardTool } from "./tools_card.js";
 import { invoiceTool, pdfStamp } from "./tools_biz.js";
 import { ocrTool } from "./tools_ocr.js";
+import { formPhotoTool, certificateTool } from "./tools_forms.js";
 import { romanToDevanagari } from "../tools/translit.js";
 import { greetingTool } from "./tools_greet.js";
 import { aiTool } from "./tools_ai.js";
@@ -144,6 +145,8 @@ const TOOLS = [
   { id: "resume", cat: "india", icon: "edit", c: "#0f766e", hi: "रिज़्यूमे / बायोडाटा", en: "Resume / biodata", dh: "हिंदी या English, A4 PDF", de: "Hindi or English, A4 PDF", view: resumeTool },
   { id: "typing", cat: "india", icon: "edit", c: "#9333ea", hi: "हिंदी टाइपिंग (Roman → देवनागरी)", en: "Hindi typing (Roman → Devanagari)", dh: "namaste → नमस्ते, कॉपी करें", de: "namaste → नमस्ते, copy", view: () => typingTool() },
   { id: "scan", cat: "pdf", icon: "list", c: "#475569", hi: "डॉक्यूमेंट स्कैनर (फ़ोटो → साफ़ PDF)", en: "Document scanner (photo → clean PDF)", dh: "परछाईं हटाएँ, काला-सफ़ेद, कई पेज", de: "Remove shadows, B&W, multi-page", view: scanTool },
+  { id: "formphoto", cat: "india", icon: "image", c: "#0284c7", hi: "फ़ॉर्म के लिए फ़ोटो / हस्ताक्षर (px + KB)", en: "Form photo / signature (px + KB)", dh: "तय साइज़ और अधिकतम KB", de: "Exact size and max KB", view: formPhotoTool },
+  { id: "certificate", cat: "india", icon: "edit", c: "#b45309", hi: "प्रमाण पत्र (Certificate) मेकर", en: "Certificate maker", dh: "सजावटी हिंदी, A4 आड़ा PDF", de: "Decorative Hindi, A4 landscape PDF", view: certificateTool },
   { id: "aitext", cat: "india", icon: "wand", c: "#2563eb", hi: "AI लेखक (Gemini)", en: "AI writer (Gemini)", dh: "शुभकामना, कैप्शन, OCR सुधार, अनुवाद", de: "Greetings, captions, OCR fix, translate", view: aiTool },
   { id: "greet", cat: "india", icon: "wand", c: "#e11d48", hi: "शुभकामना / पोस्टर मेकर", en: "Greeting / poster maker", dh: "22 सजावटी हिंदी फ़ॉन्ट, 8 बैकग्राउंड", de: "22 decorative Hindi fonts, 8 backgrounds", view: greetingTool },
   { id: "ocr", cat: "india", icon: "wand", c: "#7c3aed", hi: "फ़ोटो / स्कैन से टेक्स्ट (हिंदी OCR)", en: "Text from photo / scan (Hindi OCR)", dh: "हिंदी + English, ब्राउज़र में ही", de: "Hindi + English, in your browser", view: ocrTool },

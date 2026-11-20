@@ -114,3 +114,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-20 (night 8) — Document scanner (30 tools)
 * `scanTool` / `scanFilter` in `js/views/tools_more.js` (adaptive threshold via integral image). Tests 74/74. Sandbox check: cargo/rustc exist but crates.io is unreachable, so Rust apps still cannot be compiled here.
+
+## 2026-11-20 (night 9) — Form photo + certificate (32 tools)
+* `js/views/tools_forms.js`. Tests all pass. CI dispatch of the web build was blocked by the permission classifier; not retried.
