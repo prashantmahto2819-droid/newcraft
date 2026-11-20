@@ -4,8 +4,9 @@ import { krutiToUnicode } from "../tools/kruti.js";
 import { jpegsToPdf, canvasJpeg, loadImg } from "../tools/pdf.js";
 import { pickFile } from "./shared.js";
 import { enhance, upscale, crop, bgRemove, watermark, qrTool, wordsTool } from "./tools_img.js";
-import { pdfMerge, pdfOrganize, pdfCompress, pdfToImages } from "./tools_pdf.js";
+import { pdfMerge, pdfOrganize, pdfCompress, pdfToImages, loadLib, readBuf } from "./tools_pdf.js";
 import { barcodeTool, cardTool } from "./tools_card.js";
+import { invoiceTool, pdfStamp } from "./tools_biz.js";
 
 const L = (hi, en) => (getLang() === "hi" ? hi : en);
 const MM = 25.4;
@@ -131,6 +132,8 @@ const TOOLS = [
   { id: "pdfimg", cat: "pdf", icon: "image", c: "#a855f7", hi: "PDF → फ़ोटो", en: "PDF → images", dh: "हर पेज PNG/JPG, ZIP में", de: "Every page as PNG/JPG, ZIP", view: pdfToImages },
   { id: "card", cat: "india", icon: "edit", c: "#0f766e", hi: "विज़िटिंग / ID कार्ड", en: "Visiting / ID card", dh: "300 DPI, A4 शीट पर कई कॉपी", de: "300 DPI, multi-up A4 sheet", view: cardTool },
   { id: "barcode", cat: "india", icon: "list", c: "#334155", hi: "बारकोड (Code128, EAN-13)", en: "Barcode (Code128, EAN-13)", dh: "दुकान/स्टॉक के लिए, PNG और SVG", de: "For shops and stock, PNG and SVG", view: barcodeTool },
+  { id: "invoice", cat: "india", icon: "list", c: "#16a34a", hi: "GST बिल / इनवॉइस", en: "GST invoice maker", dh: "CGST+SGST/IGST, रकम शब्दों में, PDF", de: "CGST+SGST/IGST, amount in words, PDF", view: invoiceTool },
+  { id: "pdfstamp", cat: "pdf", icon: "edit", c: "#dc2626", hi: "PDF पर वॉटरमार्क / साइन", en: "PDF watermark / signature", dh: "हिंदी टेक्स्ट या मुहर की इमेज", de: "Hindi text or stamp image", view: () => pdfStamp(loadLib, readBuf) },
   { id: "qr", cat: "india", icon: "grid", c: "#16a34a", hi: "QR कोड (UPI, WhatsApp…)", en: "QR code (UPI, WhatsApp…)", dh: "PNG और SVG, रंग के साथ", de: "PNG and SVG, custom colours", view: qrTool },
   { id: "kruti", cat: "india", icon: "edit", c: "#f59e0b", hi: "Kruti Dev → यूनिकोड", en: "Kruti Dev → Unicode", dh: "पुराना हिंदी टेक्स्ट यूनिकोड में", de: "Old Hindi text to Unicode", beta: true, view: kruti },
   { id: "words", cat: "india", icon: "list", c: "#dc2626", hi: "रकम शब्दों में (₹)", en: "Rupees in words", dh: "हिंदी + English, लाख-करोड़", de: "Hindi + English, lakh/crore", view: wordsTool },

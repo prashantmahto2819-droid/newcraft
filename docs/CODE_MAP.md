@@ -69,3 +69,4 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 * PDF tools: `js/views/tools_pdf.js` (merge/organise/compress/pdf→images), loaders for vendored libs in `platform/web/vendor/` (pdf-lib MIT, pdfjs-dist Apache-2.0; see vendor/README.md + LICENSE files). ZIP writer `js/tools/zip.js`. Barcodes `js/tools/barcode.js`. Visiting/ID card + barcode UI `js/views/tools_card.js`. `shared.js` has `pickFiles()` (multi-file).
 * Cloud bridge: `platform/web/bridge.js` (loaded by `apps/{vector,photo,pdf}/apps/*-web/index.html` via `../bridge.js`); active only with `?project=<id>`. Test: `tools/test_bridge.py`.
 * CI: `desktop.yml` and `web.yml` have a best-effort step that clones craft-i18n (SHA from `apps/<app>/craft-i18n.rev`) and sets `CRAFT_I18N_DIR`.
+* Business tools: `js/views/tools_biz.js` (`invoiceTool`, `calcInvoice` = exact paise maths, `pdfStamp`). `tools_pdf.js` now exports `loadLib`, `readBuf`.

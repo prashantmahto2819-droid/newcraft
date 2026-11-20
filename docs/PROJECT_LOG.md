@@ -89,3 +89,7 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * `platform/web/bridge.js`: with `?project=<id>` it opens the stored file in the app (`window.vectorcraft.openFile`, or a synthetic drop on the canvas for photo/pdf), watches blob downloads, auto-uploads a re-save of the same file name, offers "Keep in cloud" for exports. Script tag added to the three Trunk index.html files.
 * `tools/test_bridge.py` 9/9 pass with stub pages. NOT verified against the real wasm apps (cannot build here): check after the first web build.
 * Found: photo/pdf had no Hindi because CI never set `CRAFT_I18N_DIR`. Both workflows now clone craft-i18n best-effort (warning, never a failed build). Could not verify the repo is public from here.
+
+## 2026-11-20 (night 3) — Tools v4: 20 tools
+* Added GST invoice maker and PDF watermark/signature stamp (`js/views/tools_biz.js`). Tests 54/54 (invoice maths incl. round-off and IGST checked exactly; stamp image present on all 5 pages).
+* Checked, not built: Film Hindi (only ~13% of film strings overlap vector's hi.tsv, and Film's `Language` enum/font gating needs a compile to verify); Devanagari fonts (no OFL font files available offline here).
