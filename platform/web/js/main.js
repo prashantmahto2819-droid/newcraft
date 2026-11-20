@@ -4,8 +4,8 @@ import { t, getLang } from "./i18n.js";
 import { importFiles, newProjectModal } from "./views/shared.js";
 import { applyTheme, getTheme, shortcutsModal } from "./views/settings.js";
 
-const ROUTES = { home: ["nav_home", "home"], projects: ["nav_projects", "folder"], templates: ["nav_templates", "grid"], brand: ["nav_brand", "palette"], downloads: ["nav_downloads", "download"], settings: ["nav_settings", "settings"] };
-const KEYS = { h: "home", p: "projects", t: "templates", b: "brand", d: "downloads", s: "settings" };
+const ROUTES = { home: ["nav_home", "home"], projects: ["nav_projects", "folder"], templates: ["nav_templates", "grid"], brand: ["nav_brand", "palette"], tools: ["nav_tools", "wand"], downloads: ["nav_downloads", "download"], settings: ["nav_settings", "settings"] };
+const KEYS = { h: "home", p: "projects", t: "templates", b: "brand", x: "tools", d: "downloads", s: "settings" };
 const ctx = { store: null, user: null, projects: [], refresh, rerender, relayout };
 let root, main, route = "home";
 
@@ -18,7 +18,7 @@ async function rerender() {
   root.querySelectorAll("[data-route]").forEach((a) => a.classList.toggle("on", a.dataset.route === route));
 }
 function relayout() { document.documentElement.lang = getLang(); buildShell(); rerender(); }
-const parse = () => { const r = location.hash.replace(/^#\/?/, "").split("?")[0]; return ROUTES[r] ? r : "home"; };
+const parse = () => { const r = location.hash.replace(/^#\/?/, "").split("?")[0].split("/")[0]; return ROUTES[r] ? r : "home"; };
 
 function buildShell() {
   root.textContent = "";
@@ -33,7 +33,7 @@ function buildShell() {
         h("button.icon-btn", { "aria-label": "theme", onclick: () => { const d = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); applyTheme(d === "dark" ? "light" : "dark"); } }, icon("sun", 19)),
         ctx.store.mode === "cloud" ? h("button.icon-btn", { "aria-label": t("sign_out"), onclick: () => ctx.store.signOut() }, icon("logout", 19)) : null)),
     main,
-    h("nav.tabbar", ["home", "projects", "templates", "brand", "settings"].map((k) => link(k, ".tab"))),
+    h("nav.tabbar", ["home", "projects", "templates", "brand", "tools", "settings"].map((k) => link(k, ".tab"))),
     h("div.dropzone", { id: "drop" }, icon("upload", 44), h("b", t("drop_here"))));
 }
 

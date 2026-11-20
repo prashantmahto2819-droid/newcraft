@@ -26,3 +26,23 @@ Legend: **[me]** can be done in the authoring sandbox · **[user]** needs the ow
 * `python3 tools/test_dashboard.py` — dashboard smoke test (demo + mocked Supabase). Run after every dashboard change.
 * Re-run `tools/rebrand.py` + `tools/finish_rebrand.py` after importing upstream changes (docs/UPSTREAM.md).
 * Trust CI over assumptions for Rust.
+
+## D. Module plan (decided 2026-11-20)
+Licence rule: GPL apps (Blender, Krita, Inkscape, Scribus, Synfig, FontForge, OBS, Audacity) can NOT be merged into our MIT/Apache code.
+Either link/launch them as separate apps (done: Tools page) or write our own from scratch (permissive crates only). AI models have their own
+licences (BRIA RMBG-1.4 is non-commercial; rembg code is MIT) — check each model before shipping.
+
+| Module | Replaces | How | Status |
+|---|---|---|---|
+| Tools page (Kruti→Unicode, passport sheet, compress/convert, images→PDF, size calc) | misc. | pure JS, offline | **done 2026-11-20** |
+| Tools: QR / barcode, ID/visiting card generator, background remove (ONNX, WASM), upscale, PDF merge/split/compress, Hindi subtitles (whisper.cpp) | | JS/WASM in dashboard | next |
+| Tulika Layout (multi-page DTP: CMYK, bleed, crop marks, print PDF) | InDesign / PageMaker | new Rust app or mode of Vector; Scribus only as reference | planned, biggest market |
+| Tulika Audio | Audition / Audacity | Rust: cpal + symphonia + rubato + hound | planned |
+| Tulika Motion (text/shape animation, lower thirds) | After Effects (lite) | extend Film | planned |
+| Tulika Lab (batch edit, presets, RAW) | Lightroom | extend Photo | planned |
+| Brush engine | Krita | extend Photo | planned |
+| Devanagari shaping check (matras, conjuncts) in every app | | verify rustybuzz/swash path in each app; add OFL fonts | planned, high priority |
+| UI/mockup | Figma / XD | link Penpot (MPL-2.0, self-hostable) | linked |
+| 3D, 2D animation, font editor, screen recorder | Blender, Synfig, FontForge, OBS | link only | linked |
+
+Note: Rust modules cannot be compiled in the authoring sandbox — each needs CI runs to verify.

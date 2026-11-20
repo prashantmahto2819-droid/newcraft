@@ -1,7 +1,7 @@
 // Tiny i18n: t("key") returns the text in the current language (hi or en). Missing keys fall back to English, then the key.
 const D = {
   hi: {
-    magic_link: "ईमेल लिंक से लॉगिन", app_name: "तूलिका", tagline: "आपका अपना रचनात्मक ऐप सूट",
+    nav_tools: "टूल्स", magic_link: "ईमेल लिंक से लॉगिन", app_name: "तूलिका", tagline: "आपका अपना रचनात्मक ऐप सूट",
     nav_home: "होम", nav_projects: "प्रोजेक्ट", nav_templates: "टेम्पलेट", nav_brand: "ब्रांड किट", nav_downloads: "डाउनलोड", nav_settings: "सेटिंग",
     hello: "नमस्ते", hello_sub: "आज क्या बनाना है?", new_project: "नया प्रोजेक्ट", create: "बनाएँ", cancel: "रद्द करें", save: "सेव करें", delete: "हटाएँ", rename: "नाम बदलें", open_app: "ऐप खोलें", download: "डाउनलोड", upload: "फ़ाइल अपलोड", duplicate: "कॉपी बनाएँ",
     recent: "हाल के प्रोजेक्ट", all_projects: "सभी प्रोजेक्ट", see_all: "सब देखें", apps: "ऐप", search_ph: "प्रोजेक्ट खोजें…  ( / )", sort_updated: "हाल में बदले", sort_name: "नाम", sort_size: "साइज़", sort_created: "बनाए गए",
@@ -21,7 +21,7 @@ const D = {
     whats_new: "नया क्या है", tip1: "फ़ाइल को सीधे इस पेज पर खींचकर छोड़ दीजिए, प्रोजेक्ट अपने आप बन जाएगा।", tip2: "ब्रांड किट में फ़ोटो से रंग निकाल सकते हैं।", tip3: "टेम्पलेट में फ्लेक्स, विज़िटिंग कार्ड और शोक पत्र के साइज़ मिलेंगे।",
   },
   en: {
-    magic_link: "Email me a login link", app_name: "Tulika", tagline: "Your own creative app suite",
+    nav_tools: "Tools", magic_link: "Email me a login link", app_name: "Tulika", tagline: "Your own creative app suite",
     nav_home: "Home", nav_projects: "Projects", nav_templates: "Templates", nav_brand: "Brand kits", nav_downloads: "Downloads", nav_settings: "Settings",
     hello: "Hello", hello_sub: "What will you create today?", new_project: "New project", create: "Create", cancel: "Cancel", save: "Save", delete: "Delete", rename: "Rename", open_app: "Open app", download: "Download", upload: "Upload file", duplicate: "Duplicate",
     recent: "Recent projects", all_projects: "All projects", see_all: "See all", apps: "Apps", search_ph: "Search projects…  ( / )", sort_updated: "Recently updated", sort_name: "Name", sort_size: "Size", sort_created: "Created",

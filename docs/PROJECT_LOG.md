@@ -62,3 +62,11 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * `desktop.yml` Collect step now packages each build as `tulika-<app>-<OS>.zip` (Windows) / `.tar.gz` (Linux, macOS) with NOTICE + licences, so the exec bit survives. **[ci] not yet run** — check on the next desktop run.
 * Added `tools/test_dashboard.py` (Playwright; demo mode + mocked Supabase CloudStore: login, create, list, kits, shortcuts) — all pass.
 * Added `docs/ROADMAP.md` with the ordered list of remaining work.
+
+## 2026-11-20 (evening) — Tools section
+* New route `#/tools` (+ `#/tools/<id>`): `js/views/tools.js`, `js/tools/kruti.js` (Kruti Dev 010 → Unicode, **beta**, mapping written from memory; 8 sample words verified),
+  `js/tools/pdf.js` (minimal JPEG→PDF writer). Tools: Kruti converter, passport/ID photo sheet (PNG/PDF, 300 DPI), compress/convert, images→PDF, print size calculator.
+* Page also lists 8 external open-source tools (Penpot, Blender, Krita, Inkscape, Scribus, Synfig, FontForge, OBS) with licences — linked, not bundled.
+* Nav: sidebar + 6-item mobile tab bar now include Tools; shortcut `g x`.
+* `tools/test_dashboard.py` extended (all pass, incl. valid PDF output). Module plan written to ROADMAP section D.
+* Known: Kruti mapping lacks rarer conjuncts/nukta; no QR yet (needs encoder).

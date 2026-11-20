@@ -5,7 +5,7 @@ import { guard } from "./shared.js";
 
 export const applyTheme = (v) => { const r = document.documentElement; v === "light" || v === "dark" ? r.setAttribute("data-theme", v) : r.removeAttribute("data-theme"); try { localStorage.setItem("tulika-theme", v || "system"); } catch {} };
 export const getTheme = () => { try { return localStorage.getItem("tulika-theme") || "system"; } catch { return "system"; } };
-export const SHORTCUTS = [["/", "search"], ["n", "new project"], ["g h", "Home"], ["g p", "Projects"], ["g t", "Templates"], ["g b", "Brand kits"], ["g d", "Downloads"], ["g s", "Settings"], ["?", "Help"]];
+export const SHORTCUTS = [["/", "search"], ["n", "new project"], ["g h", "Home"], ["g p", "Projects"], ["g t", "Templates"], ["g b", "Brand kits"], ["g x", "Tools"], ["g d", "Downloads"], ["g s", "Settings"], ["?", "Help"]];
 export const shortcutsModal = () => modal({ title: t("shortcuts"), body: h("table.keys", SHORTCUTS.map(([k, d]) => h("tr", h("td", h("kbd", k)), h("td", d)))) });
 
 export async function render(ctx) {
