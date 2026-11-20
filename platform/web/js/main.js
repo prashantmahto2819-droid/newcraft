@@ -76,7 +76,7 @@ function setupGlobal() {
 
 async function start() {
   root = document.getElementById("app"); root.classList.remove("boot"); applyTheme(getTheme()); document.documentElement.lang = getLang();
-  ctx.store = await createStore(); route = parse(); setupGlobal();
+  ctx.store = await createStore(); window.TULIKA_STORE = ctx.store; route = parse(); setupGlobal();
   const boot = async (user) => { ctx.user = user; if (!user) return loginView(); buildShell(); await refresh(); };
   const { user } = await ctx.store.init(); ctx.store.onAuth((u) => boot(u)); await boot(user);
   const q = new URLSearchParams(location.search); if (q.get("new")) newProjectModal(ctx, { app: q.get("new") });

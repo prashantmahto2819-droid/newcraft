@@ -33,6 +33,7 @@ class DemoStore {
   async removeKit(id) { this.db.kits = this.db.kits.filter((k) => k.id !== id); this._save(); }
   async usage() { return { bytes: this.db.projects.reduce((s, p) => s + (p.size_bytes || 0), 0), limit: LIMIT }; }
   async exportAll() { return { projects: this.db.projects, kits: this.db.kits }; }
+  async aiText() { throw new Error("ai_needs_cloud"); }
   async reset() { this.db = { projects: [], kits: [], files: {} }; this._save(); }
 }
 
@@ -78,6 +79,7 @@ class CloudStore {
   async removeKit(id) { const { error } = await this.sb.from("brand_kits").delete().eq("id", id); if (error) throw error; }
   async usage() { const { data } = await this.sb.from("projects").select("size_bytes"); return { bytes: (data || []).reduce((s, p) => s + (p.size_bytes || 0), 0), limit: LIMIT }; }
   async exportAll() { return { projects: await this.listProjects(), kits: await this.listKits() }; }
+  async aiText(task, prompt) { const { data, error } = await this.sb.functions.invoke("ai-text", { body: { task, prompt } }); if (error) throw error; if (data?.error) throw new Error(data.error); return data.text; }
   async reset() {}
 }
 

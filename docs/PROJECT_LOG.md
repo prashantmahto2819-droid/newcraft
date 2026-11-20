@@ -99,3 +99,9 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * Added OCR tool (Hindi + English, photo or scanned PDF, pages up to 40) with our own worker over tesseract.js-core 7.0.0 and LSTM-only tessdata_fast models (~13 MB in vendor/ocr, loaded only when the tool runs).
 * Vendored Noto Sans Devanagari + Inter (OFL) and dropped the Google Fonts link (privacy, offline). Canvas tools now wait for fonts.
 * Tests: all pass, incl. OCR of a generated Hindi/English image and a scanned PDF.
+
+## 2026-11-20 (night 5) — Poster maker + Gemini AI writer (23 tools)
+* Greeting/poster maker with 22 OFL display fonts (6.8 MB, loaded on demand), 8 generated backgrounds, frames, outline/shadow, round photo; 1080 square/portrait/story.
+* Gemini: Supabase edge function `ai-text` + `store.aiText` + AI writer tool. Key lives only as a Supabase secret. Not testable here against real Gemini.
+* Deliberately NOT done: copying fonts/designs from the paid "India Font"-type app (licensed content). Used free OFL fonts and our own generated designs instead.
+* Tests 61/61.
