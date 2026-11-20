@@ -89,3 +89,31 @@ export function resumeTool() {
     h("div.btnrow", h("button.ghost", { onclick: () => pickFile("image/*", async (f) => { photo = await loadImg(f); draw(); }) }, icon("image", 16), L("फ़ोटो (गोल)", "Photo (round)")),
       h("button.primary", { onclick: async () => { await draw(); const full = document.createElement("canvas"); drawResume(full, d, photo); downloadBlob("resume.pdf", new Blob([jpegsToPdf([{ jpeg: await canvasJpeg(full, 0.92), w: full.width, h: full.height, pw: 595.28, ph: 841.89, x: 0, y: 0, iw: 595.28, ih: 841.89 }])], { type: "application/pdf" })); } }, icon("download", 16), "PDF")), out);
 }
+
+// ---- document scanner filter: photos of pages -> clean B&W / magic colour -> PDF
+export function scanFilter(img, mode, strength = 12) { // img: ImageData (modified in place). mode: gray | bw | magic
+  const { width: W, height: H, data: d } = img, g = new Float32Array(W * H);
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+  if (mode === "gray") { for (let i = 0, p = 0; i < d.length; i += 4, p++) d[i] = d[i + 1] = d[i + 2] = g[p]; return img; }
+  const ii = new Float64Array((W + 1) * (H + 1)); for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += g[y * W + x]; ii[(y + 1) * (W + 1) + x + 1] = ii[y * (W + 1) + x + 1] + row; } }
+  const r = Math.max(8, Math.round(Math.min(W, H) / 24));
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const x0 = Math.max(0, x - r), x1 = Math.min(W, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(H, y + r + 1), n = (x1 - x0) * (y1 - y0);
+    const mean = (ii[y1 * (W + 1) + x1] - ii[y0 * (W + 1) + x1] - ii[y1 * (W + 1) + x0] + ii[y0 * (W + 1) + x0]) / n, p = (y * W + x) * 4;
+    if (mode === "bw") { const v = g[y * W + x] > mean * (1 - strength / 100) ? 255 : 0; d[p] = d[p + 1] = d[p + 2] = v; }
+    else { const gain = Math.min(3, 235 / Math.max(40, mean)); for (let c = 0; c < 3; c++) d[p + c] = Math.max(0, Math.min(255, (d[p + c] * gain - 128) * 1.15 + 128 + 10)); }
+  }
+  return img;
+}
+export function scanTool() {
+  let files = [], mode = "bw", strength = 12; const info = h("small"), prev = h("div.canvasbox");
+  const render = async (f, maxSide = 2400) => { const im = await loadImg(f), s = Math.min(1, maxSide / Math.max(im.width, im.height)), c = document.createElement("canvas"); c.width = Math.round(im.width * s); c.height = Math.round(im.height * s); const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0, c.width, c.height); x.putImageData(scanFilter(x.getImageData(0, 0, c.width, c.height), mode, strength), 0, 0); return c; };
+  const refresh = async () => { prev.textContent = ""; if (!files.length) return; const c = await render(files[0], 700); c.className = "prev"; prev.append(c); };
+  const go = h("button.primary", icon("download", 16), "PDF");
+  go.onclick = async () => { if (!files.length) return toast(L("पहले फ़ोटो चुनिए", "Choose photos first"), "err"); go.disabled = true;
+    try { const pages = []; for (const f of files) { const c = await render(f), pw = 595.28, ph = Math.round((pw * c.height) / c.width * 100) / 100, jpeg = await canvasJpeg(c, 0.85); pages.push({ jpeg, w: c.width, h: c.height, pw, ph, x: 0, y: 0, iw: pw, ih: ph }); }
+      downloadBlob("scan.pdf", new Blob([jpegsToPdf(pages)], { type: "application/pdf" })); } finally { go.disabled = false; } };
+  return h("div.form", note(L("काग़ज़ की फ़ोटो को साफ़ स्कैन जैसा बनाइए (परछाईं हटती है, लिखावट उभरती है) और कई पेज की PDF बनाइए।", "Turn photos of paper into clean scans (shadows removed, text sharp) and make a multi-page PDF.")),
+    h("div.grid2", field(L("तरीक़ा", "Mode"), sel([["bw", L("काला-सफ़ेद (दस्तावेज़)", "Black & white (documents)")], ["magic", L("साफ़ रंगीन", "Clean colour")], ["gray", L("ग्रे", "Grey")]], mode, (v) => { mode = v; refresh(); })), field(L("काला-सफ़ेद की ताक़त", "B&W strength"), h("input", { type: "range", min: 4, max: 30, value: strength, oninput: (e) => { strength = +e.target.value; refresh(); } }))),
+    h("div.btnrow", h("button.ghost", { onclick: () => pickFiles("image/*", (f) => { files = f; info.textContent = `${f.length} ${L("पेज", "pages")}`; refresh(); }) }, icon("upload", 16), L("पेज की फ़ोटो चुनिए (कई)", "Choose page photos (many)")), go, info), prev);
+}

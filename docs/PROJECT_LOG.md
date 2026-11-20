@@ -111,3 +111,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-20 (night 7) — Hindi typing tool (29 tools)
 * `js/tools/translit.js`: Roman -> Devanagari phonetic typing, ITRANS-like (a between consonants keeps them apart). Tests 71/71.
+
+## 2026-11-20 (night 8) — Document scanner (30 tools)
+* `scanTool` / `scanFilter` in `js/views/tools_more.js` (adaptive threshold via integral image). Tests 74/74. Sandbox check: cargo/rustc exist but crates.io is unreachable, so Rust apps still cannot be compiled here.

@@ -50,7 +50,7 @@ with sync_playwright() as p:
     def grab(sel=".tool .btnrow .primary"):
         with pg.expect_download() as d: pg.click(sel)
         return d.value.path()
-    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 29, "tools: 29 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
+    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 30, "tools: 30 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
     tool("kruti"); pg.fill("textarea >> nth=0", "fgUnh Hkkjr dk;kZy;"); ok(pg.input_value("textarea >> nth=1") == "हिन्दी भारत कार्यालय", "kruti conversion in UI")
     tool("words"); pg.fill("input[inputmode=decimal]", "123456.50"); ok("एक लाख तेईस हज़ार चार सौ छप्पन रुपये और पचास पैसे मात्र" == pg.input_value("textarea >> nth=0") and pg.input_value("textarea >> nth=1").startswith("One Lakh Twenty Three Thousand"), "rupees in words hi+en")
     tool("size"); ok("182.88" in pg.inner_text(".tool"), "size calc 6x3 ft -> cm")
@@ -166,6 +166,15 @@ with sync_playwright() as p:
     tr = pg.evaluate("""async () => { const m = await import('./js/tools/translit.js'); return ['namaste','bhaarat','hindii','shubhakaamanaaeM','prashaaMt','mitra','gyaan','kyaa haal hai','{Hello} duniyaa','kRRiShNa'].map(x => m.romanToDevanagari(x)); }""")
     ok(tr == ["नमस्ते", "भारत", "हिन्दी", "शुभकामनाएं", "प्रशांत", "मित्र", "ज्ञान", "क्या हाल है", "Hello दुनिया", "कृष्ण"], "transliteration samples: " + str(tr))
     tool("typing"); pg.fill(".tool textarea >> nth=0", "namaste bhaarat"); ok(pg.locator(".tool textarea").nth(1).input_value() == "नमस्ते भारत", "typing tool converts live")
+    # ---- document scanner: a page photo with a strong shadow gradient must come out clean B&W with text kept
+    from PIL import ImageDraw
+    pgimg = Image.new("RGB", (800, 1100), (235, 232, 225)); dr = ImageDraw.Draw(pgimg)
+    for k in range(12): dr.rectangle((80, 120 + k * 70, 720 - (k % 3) * 90, 150 + k * 70), fill=(30, 30, 40))
+    arr = np.array(pgimg).astype(float); grad = np.linspace(1.0, 0.45, 800)[None, :, None]; Image.fromarray((arr * grad).clip(0, 255).astype("uint8")).save(os.path.join(tmp, "page.jpg"), quality=92)
+    tool("scan"); choose(os.path.join(tmp, "page.jpg"), "text=/Choose page|पेज की फ़ोटो/"); sp2 = grab(".tool .btnrow .primary"); sr2 = PdfReader(sp2); ok(len(sr2.pages) == 1, "scan PDF has 1 page")
+    simg = sr2.pages[0].images[0].image.convert("L"); sa = np.array(simg); left = sa[:, : int(sa.shape[1] * 0.07)]; right = sa[:, -int(sa.shape[1] * 0.07) :]
+    ok(np.mean(left > 200) > 0.85 and np.mean(right > 200) > 0.85, "scan: paper is white on both the bright and the shadowed side (%.2f / %.2f)" % (np.mean(left > 200), np.mean(right > 200)))
+    ok(np.mean(sa < 60) > 0.08, "scan: text strokes are kept (dark share %.3f)" % np.mean(sa < 60))
     # ---- cloud mode (mock supabase)
     c = b.new_page(viewport={"width": 390, "height": 780}); c.on("pageerror", lambda e: errs.append(str(e)))
     c.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))
