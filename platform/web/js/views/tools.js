@@ -10,6 +10,7 @@ import { invoiceTool, pdfStamp } from "./tools_biz.js";
 import { ocrTool } from "./tools_ocr.js";
 import { greetingTool } from "./tools_greet.js";
 import { aiTool } from "./tools_ai.js";
+import { paletteTool, iconPackTool, convertTool, collageTool, resumeTool } from "./tools_more.js";
 
 const L = (hi, en) => (getLang() === "hi" ? hi : en);
 const MM = 25.4;
@@ -135,6 +136,11 @@ const TOOLS = [
   { id: "pdfimg", cat: "pdf", icon: "image", c: "#a855f7", hi: "PDF → फ़ोटो", en: "PDF → images", dh: "हर पेज PNG/JPG, ZIP में", de: "Every page as PNG/JPG, ZIP", view: pdfToImages },
   { id: "card", cat: "india", icon: "edit", c: "#0f766e", hi: "विज़िटिंग / ID कार्ड", en: "Visiting / ID card", dh: "300 DPI, A4 शीट पर कई कॉपी", de: "300 DPI, multi-up A4 sheet", view: cardTool },
   { id: "barcode", cat: "india", icon: "list", c: "#334155", hi: "बारकोड (Code128, EAN-13)", en: "Barcode (Code128, EAN-13)", dh: "दुकान/स्टॉक के लिए, PNG और SVG", de: "For shops and stock, PNG and SVG", view: barcodeTool },
+  { id: "palette", cat: "photo", icon: "wand", c: "#f97316", hi: "फ़ोटो से रंग-पैलेट", en: "Colour palette from photo", dh: "मुख्य 6 रंग, HEX कॉपी", de: "Top 6 colours, copy HEX", view: paletteTool },
+  { id: "iconpack", cat: "photo", icon: "image", c: "#0ea5e9", hi: "आइकन / favicon पैक", en: "Icon / favicon pack", dh: "एक इमेज से सारे साइज़ (ZIP)", de: "All sizes from one image (ZIP)", view: iconPackTool },
+  { id: "convert", cat: "photo", icon: "download", c: "#10b981", hi: "फ़ॉर्मेट बदलें + EXIF/लोकेशन हटाएँ", en: "Convert format + strip EXIF", dh: "WebP / JPG / PNG, कई फ़ोटो", de: "WebP / JPG / PNG, many photos", view: convertTool },
+  { id: "collage", cat: "photo", icon: "image", c: "#ec4899", hi: "फ़ोटो कोलाज", en: "Photo collage", dh: "2–9 फ़ोटो, ग्रिड", de: "2–9 photos, grid", view: collageTool },
+  { id: "resume", cat: "india", icon: "edit", c: "#0f766e", hi: "रिज़्यूमे / बायोडाटा", en: "Resume / biodata", dh: "हिंदी या English, A4 PDF", de: "Hindi or English, A4 PDF", view: resumeTool },
   { id: "aitext", cat: "india", icon: "wand", c: "#2563eb", hi: "AI लेखक (Gemini)", en: "AI writer (Gemini)", dh: "शुभकामना, कैप्शन, OCR सुधार, अनुवाद", de: "Greetings, captions, OCR fix, translate", view: aiTool },
   { id: "greet", cat: "india", icon: "wand", c: "#e11d48", hi: "शुभकामना / पोस्टर मेकर", en: "Greeting / poster maker", dh: "22 सजावटी हिंदी फ़ॉन्ट, 8 बैकग्राउंड", de: "22 decorative Hindi fonts, 8 backgrounds", view: greetingTool },
   { id: "ocr", cat: "india", icon: "wand", c: "#7c3aed", hi: "फ़ोटो / स्कैन से टेक्स्ट (हिंदी OCR)", en: "Text from photo / scan (Hindi OCR)", dh: "हिंदी + English, ब्राउज़र में ही", de: "Hindi + English, in your browser", view: ocrTool },

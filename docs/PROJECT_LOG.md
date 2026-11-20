@@ -105,3 +105,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * Gemini: Supabase edge function `ai-text` + `store.aiText` + AI writer tool. Key lives only as a Supabase secret. Not testable here against real Gemini.
 * Deliberately NOT done: copying fonts/designs from the paid "India Font"-type app (licensed content). Used free OFL fonts and our own generated designs instead.
 * Tests 61/61.
+
+## 2026-11-20 (night 6) — Tools v5: 28 tools
+* Added colour palette, icon/favicon pack, format convert + EXIF strip, collage, resume maker (`js/views/tools_more.js`). Tests 69/69.
