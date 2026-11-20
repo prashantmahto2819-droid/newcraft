@@ -3,6 +3,7 @@ import { getLang, bytes } from "../i18n.js";
 import { krutiToUnicode } from "../tools/kruti.js";
 import { jpegsToPdf, canvasJpeg, loadImg } from "../tools/pdf.js";
 import { pickFile } from "./shared.js";
+import { enhance, upscale, crop, bgRemove, watermark, qrTool, wordsTool } from "./tools_img.js";
 
 const L = (hi, en) => (getLang() === "hi" ? hi : en);
 const MM = 25.4;
@@ -50,22 +51,34 @@ function passport() {
     h("div.btnrow", h("button.ghost", { onclick: pick }, icon("image", 16), L("फ़ोटो चुनिए", "Choose photo")), h("button.primary", { onclick: need(png) }, icon("download", 16), "PNG"), h("button.primary", { onclick: need(pdf) }, icon("download", 16), "PDF")), info, h("div.canvasbox", cv));
 }
 
-// ---------- 3. Image resize / compress / convert ----------
+// ---------- 3. Compress / convert (with target file size) ----------
+const toBlob = (c, fmt, q) => new Promise((r) => c.toBlob(r, fmt, q));
+export async function encodeToTarget(c, fmt, targetKB) {
+  if (!targetKB || fmt === "image/png") return toBlob(c, fmt, 0.8);
+  const max = targetKB * 1024; let cur = c, scale = 1;
+  for (let step = 0; step < 12; step++) {
+    let lo = 0.05, hi = 0.95, best = null;
+    for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2, b = await toBlob(cur, fmt, mid); if (b.size <= max) { best = b; lo = mid; } else hi = mid; }
+    if (best) return best;
+    scale *= 0.85; const n = document.createElement("canvas"); n.width = Math.max(8, Math.round(c.width * scale)); n.height = Math.max(8, Math.round(c.height * scale)); n.getContext("2d").drawImage(c, 0, 0, n.width, n.height); cur = n;
+  }
+  return toBlob(cur, fmt, 0.05);
+}
 function imageTool() {
-  let fmt = "image/jpeg", q = 80, maxW = 1600, list = []; const out = h("div.rows");
+  let fmt = "image/jpeg", q = 80, maxW = 1600, kb = 0, list = []; const out = h("div.rows");
   const draw = () => { out.textContent = ""; list.forEach((r) => out.append(h("div.row", h("div.grow", h("b", r.name), h("small", `${bytes(r.before)} → ${bytes(r.blob.size)} · ${r.w}×${r.h}`)), h("button.ghost", { onclick: () => downloadBlob(r.name, r.blob) }, icon("download", 16))))); };
   const run = async (files) => {
-    list = [];
+    list = []; const f2 = kb && fmt === "image/png" ? "image/jpeg" : fmt;
     for (const f of files) {
       const im = await loadImg(f), s = Math.min(1, maxW / im.width), w = Math.round(im.width * s), hh = Math.round(im.height * s);
-      const c = document.createElement("canvas"); c.width = w; c.height = hh; const x = c.getContext("2d"); if (fmt === "image/jpeg") { x.fillStyle = "#fff"; x.fillRect(0, 0, w, hh); } x.drawImage(im, 0, 0, w, hh);
-      const blob = await new Promise((r) => c.toBlob(r, fmt, q / 100)); const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[fmt];
+      const c = document.createElement("canvas"); c.width = w; c.height = hh; const x = c.getContext("2d"); if (f2 !== "image/png") { x.fillStyle = "#fff"; x.fillRect(0, 0, w, hh); } x.drawImage(im, 0, 0, w, hh);
+      const blob = kb ? await encodeToTarget(c, f2, kb) : await toBlob(c, f2, q / 100); const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[f2];
       list.push({ name: f.name.replace(/\.[^.]+$/, "") + "-tulika." + ext, blob, before: f.size, w, h: hh }); URL.revokeObjectURL(im.src);
     } draw();
   };
-  return h("div.form", note(L("एक साथ कई फ़ोटो छोटी करें, साइज़ घटाएँ या JPG/PNG/WebP में बदलें।", "Shrink, resize or convert many photos at once to JPG/PNG/WebP.")),
+  return h("div.form", note(L("एक साथ कई फ़ोटो छोटी करें, साइज़ घटाएँ या JPG/PNG/WebP में बदलें। सरकारी फ़ॉर्म के लिए 'KB से कम' भी तय कर सकते हैं।", "Shrink, resize or convert many photos at once. For government forms you can also set a 'max KB' target.")),
     h("div.grid2", field(L("फ़ॉर्मैट", "Format"), sel([["image/jpeg", "JPG"], ["image/png", "PNG"], ["image/webp", "WebP"]], fmt, (v) => (fmt = v))), field(L("अधिकतम चौड़ाई (px)", "Max width (px)"), num(maxW, { onchange: (e) => (maxW = Math.max(16, +e.target.value || 1600)) })),
-      field(L("क्वालिटी %", "Quality %"), num(q, { min: 1, max: 100, onchange: (e) => (q = Math.min(100, Math.max(1, +e.target.value || 80))) }))),
+      field(L("क्वालिटी %", "Quality %"), num(q, { min: 1, max: 100, onchange: (e) => (q = Math.min(100, Math.max(1, +e.target.value || 80))) })), field(L("KB से कम (0 = बंद)", "Under KB (0 = off)"), num(kb, { min: 0, onchange: (e) => (kb = Math.max(0, +e.target.value || 0)) }))),
     h("button.primary", { onclick: () => multi("image/*", (f) => f.length && run(f)) }, icon("upload", 16), L("फ़ोटो चुनिए और बदलिए", "Choose photos & convert")), out);
 }
 
@@ -102,12 +115,20 @@ function sizeCalc() {
 }
 
 const TOOLS = [
-  { id: "kruti", icon: "edit", c: "#f59e0b", hi: "Kruti Dev → यूनिकोड", en: "Kruti Dev → Unicode", dh: "पुराना हिंदी टेक्स्ट यूनिकोड में", de: "Old Hindi text to Unicode", beta: true, view: kruti },
-  { id: "passport", icon: "image", c: "#f43f8e", hi: "पासपोर्ट / ID फ़ोटो शीट", en: "Passport / ID photo sheet", dh: "एक फ़ोटो से पूरी प्रिंट शीट", de: "One photo to a full print sheet", view: passport },
-  { id: "image", icon: "wand", c: "#14b8a6", hi: "फ़ोटो छोटी / बदलें", en: "Compress / convert photos", dh: "साइज़ घटाएँ, JPG/PNG/WebP", de: "Shrink, resize, JPG/PNG/WebP", view: imageTool },
-  { id: "imgpdf", icon: "box", c: "#8b5cf6", hi: "फ़ोटो → PDF", en: "Images → PDF", dh: "कई फ़ोटो से एक PDF", de: "Many photos into one PDF", view: imgPdf },
-  { id: "size", icon: "grid", c: "#0ea5e9", hi: "प्रिंट साइज़ कैलकुलेटर", en: "Print size calculator", dh: "फ्लेक्स: फ़ीट ↔ मिमी ↔ पिक्सल", de: "Flex: ft ↔ mm ↔ pixels", view: sizeCalc },
+  { id: "bg", cat: "photo", icon: "wand", c: "#ec4899", hi: "बैकग्राउंड हटाएँ", en: "Background remover", dh: "सादा बैकग्राउंड: ऑफ़लाइन। पोर्ट्रेट: AI (प्रायोगिक)", de: "Plain bg offline; portrait AI (experimental)", beta: true, view: bgRemove },
+  { id: "enhance", cat: "photo", icon: "wand", c: "#f59e0b", hi: "फ़ोटो एन्हांसर", en: "Photo enhancer", dh: "ऑटो-लेवल, रंग, नॉइज़, शार्पनेस", de: "Auto levels, colour, denoise, sharpen", view: enhance },
+  { id: "upscale", cat: "photo", icon: "image", c: "#8b5cf6", hi: "फ़ोटो बड़ी करें (अपस्केल)", en: "Upscale photo", dh: "2×/3×/4× और शार्पन", de: "2×/3×/4× with sharpening", view: upscale },
+  { id: "compress", cat: "photo", icon: "download", c: "#14b8a6", hi: "कंप्रेसर / कन्वर्टर", en: "Compressor / converter", dh: "KB से कम, JPG/PNG/WebP, कई फ़ोटो", de: "Under-KB target, JPG/PNG/WebP, batch", view: imageTool },
+  { id: "crop", cat: "photo", icon: "grid", c: "#0ea5e9", hi: "क्रॉप / रोटेट / साइज़", en: "Crop / rotate / resize", dh: "सोशल मीडिया और फ़ॉर्म के साइज़", de: "Social and form-photo sizes", view: crop },
+  { id: "watermark", cat: "photo", icon: "edit", c: "#64748b", hi: "वॉटरमार्क", en: "Watermark", dh: "हिंदी टेक्स्ट, कोने में या पूरी फ़ोटो पर", de: "Hindi text, corner or tiled", view: watermark },
+  { id: "passport", cat: "photo", icon: "image", c: "#f43f8e", hi: "पासपोर्ट / ID फ़ोटो शीट", en: "Passport / ID photo sheet", dh: "एक फ़ोटो से पूरी प्रिंट शीट", de: "One photo to a full print sheet", view: passport },
+  { id: "imgpdf", cat: "photo", icon: "box", c: "#7c3aed", hi: "फ़ोटो → PDF", en: "Images → PDF", dh: "कई फ़ोटो से एक PDF", de: "Many photos into one PDF", view: imgPdf },
+  { id: "qr", cat: "india", icon: "grid", c: "#16a34a", hi: "QR कोड (UPI, WhatsApp…)", en: "QR code (UPI, WhatsApp…)", dh: "PNG और SVG, रंग के साथ", de: "PNG and SVG, custom colours", view: qrTool },
+  { id: "kruti", cat: "india", icon: "edit", c: "#f59e0b", hi: "Kruti Dev → यूनिकोड", en: "Kruti Dev → Unicode", dh: "पुराना हिंदी टेक्स्ट यूनिकोड में", de: "Old Hindi text to Unicode", beta: true, view: kruti },
+  { id: "words", cat: "india", icon: "list", c: "#dc2626", hi: "रकम शब्दों में (₹)", en: "Rupees in words", dh: "हिंदी + English, लाख-करोड़", de: "Hindi + English, lakh/crore", view: wordsTool },
+  { id: "size", cat: "india", icon: "grid", c: "#0ea5e9", hi: "प्रिंट साइज़ कैलकुलेटर", en: "Print size calculator", dh: "फ्लेक्स: फ़ीट ↔ मिमी ↔ पिक्सल", de: "Flex: ft ↔ mm ↔ pixels", view: sizeCalc },
 ];
+const CATS = [["photo", "फ़ोटो और PDF", "Photo & PDF"], ["india", "भारत और हिंदी", "India & Hindi"]];
 const EXT = [
   ["Penpot", "MPL-2.0", "https://penpot.app", L("UI/मॉकअप, Figma जैसा", "UI / mockups, Figma-like")],
   ["Blender", "GPL", "https://www.blender.org", L("3D और VFX", "3D & VFX")],
@@ -123,7 +144,7 @@ export async function render(ctx) {
   const cur = location.hash.replace(/^#\/?/, "").split("?")[0].split("/")[1]; const t = TOOLS.find((x) => x.id === cur);
   if (t) return h("div.view", h("div.page-head", h("div", h("a", { href: "#/tools" }, "← " + L("सभी टूल", "All tools")), h("h1", L(t.hi, t.en)))), h("section.card.tool", t.view()));
   return h("div.view", h("div.page-head", h("div", h("h1", L("टूल्स", "Tools")), h("p.sub", L("छोटे काम के टूल, सब आपके ब्राउज़र में चलते हैं। कुछ भी सर्वर पर नहीं जाता।", "Quick utilities that run entirely in your browser. Nothing is uploaded.")))),
-    h("div.tiles", TOOLS.map((x) => h("a.tile", { style: { "--c": x.c }, href: "#/tools/" + x.id }, h("span.appicon", { style: { width: "42px", height: "42px", background: x.c } }, icon(x.icon, 24)), h("b", L(x.hi, x.en)), h("small", L(x.dh, x.de)), x.beta ? h("span.badge.warn", "BETA") : h("span.badge", L("ऑफ़लाइन", "Offline"))))),
+    CATS.map(([k, hi, en]) => h("section", h("h2.cat", L(hi, en)), h("div.tiles", TOOLS.filter((x) => x.cat === k).map((x) => h("a.tile", { style: { "--c": x.c }, href: "#/tools/" + x.id }, h("span.appicon", { style: { width: "42px", height: "42px", background: x.c } }, icon(x.icon, 24)), h("b", L(x.hi, x.en)), h("small", L(x.dh, x.de)), x.beta ? h("span.badge.warn", "BETA") : h("span.badge", L("ऑफ़लाइन", "Offline"))))))),
     h("section", h("h2.cat", L("बाहर के ओपन-सोर्स टूल", "Open-source tools outside Tulika")), h("p.sub", L("ये अलग ऐप हैं (हमारे कोड में शामिल नहीं), इसलिए लाइसेंस की दिक्कत नहीं। इन्हें साथ में इस्तेमाल कीजिए।", "Separate apps (not part of our code), so no licence mixing. Use them alongside Tulika.")),
       h("div.tgrid", EXT.map(([n, lic, url, d]) => h("a.tpl", { href: url, target: "_blank", rel: "noopener" }, h("b", n), h("small", d), h("span.badge", lic), h("span.apptag", icon("ext", 14), url.replace("https://", "")))))));
 }

@@ -70,3 +70,11 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * Nav: sidebar + 6-item mobile tab bar now include Tools; shortcut `g x`.
 * `tools/test_dashboard.py` extended (all pass, incl. valid PDF output). Module plan written to ROADMAP section D.
 * Known: Kruti mapping lacks rarer conjuncts/nukta; no QR yet (needs encoder).
+
+## 2026-11-20 (night) — Tools section v2: 12 tools
+* Added: background remover (plain bg flood-fill, click to pick bg colour; AI portrait mode experimental via transformers.js + Xenova/modnet from esm.sh), photo enhancer, upscale,
+  crop/rotate/presets, watermark (Hindi text), QR generator (`js/tools/qr.js`, own encoder), rupees in words (`js/tools/words.js`), compressor with "under N KB" target.
+* New files: `js/tools/{imaging,qr,words}.js`, `js/views/tools_img.js` (generic `workbench()` = pick image → live preview → controls → download). `tools.js` now groups tools by category.
+* Tests: `tools/test_dashboard.py` 30/30 pass (QR decoded with OpenCV, bg-removal alpha checked with PIL, compress to <=50KB verified, PDFs validated).
+* OpenCV's default QR detector is flaky on some valid codes (mask 2); tests use `QRCodeDetectorAruco`.
+* Not verified: AI bg-remove (no network here); real-world Kruti texts.

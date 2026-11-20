@@ -38,26 +38,56 @@ with sync_playwright() as p:
     pg.keyboard.press("g"); pg.keyboard.press("d"); pg.wait_for_timeout(250); ok(pg.url.endswith("#/downloads"), "shortcut g d")
     pg.screenshot(path=f"{OUT}/demo_downloads.png")
     # ---- tools section
-    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 5, "tools: 5 tool tiles")
-    ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
-    pg.locator(".tile").nth(0).click(); pg.fill("textarea >> nth=0", "fgUnh Hkkjr dk;kZy;"); ok(pg.input_value("textarea >> nth=1") == "हिन्दी भारत कार्यालय", "kruti conversion in UI")
-    pg.goto(U + "#/tools"); pg.locator(".tile").nth(1).click()
-    pg.locator("button:has(svg) >> text=/फ़ोटो चुनिए/").click() if False else None
-    with pg.expect_file_chooser() as fc: pg.click("text=फ़ोटो चुनिए")
-    fc.value.set_files(os.path.join(ROOT, "icons", "icon-192.png")); pg.wait_for_timeout(500)
-    ok("/" in pg.inner_text(".tool small") and "300 DPI" in pg.inner_text(".tool small"), "passport sheet drawn: " + pg.inner_text(".tool small"))
+    import numpy as np, cv2, tempfile
+    from PIL import Image, ImageDraw
+    tmp = tempfile.mkdtemp(); bgimg = os.path.join(tmp, "bg.png"); noisy = os.path.join(tmp, "noisy.jpg")
+    im = Image.new("RGB", (400, 300), (250, 250, 250)); ImageDraw.Draw(im).ellipse((120, 70, 280, 230), fill=(200, 30, 30)); im.save(bgimg)
+    Image.fromarray(np.random.RandomState(1).randint(0, 255, (1400, 1400, 3), dtype=np.uint8)).save(noisy, quality=95)
+    def tool(i): pg.goto(U + "#/tools/" + i); pg.wait_for_selector(".tool"); pg.wait_for_timeout(150)
+    def pick(path, sel):
+        with pg.expect_file_chooser() as fc: pg.click(sel)
+        fc.value.set_files(path); pg.wait_for_timeout(700)
+    def grab(sel=".tool .btnrow .primary"):
+        with pg.expect_download() as d: pg.click(sel)
+        return d.value.path()
+    pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); ok(pg.locator(".tile").count() == 12, "tools: 12 tool tiles"); ok(pg.locator("a.tpl").count() == 8, "tools: 8 external links")
+    tool("kruti"); pg.fill("textarea >> nth=0", "fgUnh Hkkjr dk;kZy;"); ok(pg.input_value("textarea >> nth=1") == "हिन्दी भारत कार्यालय", "kruti conversion in UI")
+    tool("words"); pg.fill("input[inputmode=decimal]", "123456.50"); ok("एक लाख तेईस हज़ार चार सौ छप्पन रुपये और पचास पैसे मात्र" == pg.input_value("textarea >> nth=0") and pg.input_value("textarea >> nth=1").startswith("One Lakh Twenty Three Thousand"), "rupees in words hi+en")
+    tool("size"); ok("182.88" in pg.inner_text(".tool"), "size calc 6x3 ft -> cm")
+    tool("passport"); pick(bgimg, "text=फ़ोटो चुनिए"); ok("300 DPI" in pg.inner_text(".tool small"), "passport sheet drawn")
     with pg.expect_download() as dl: pg.click(".tool .btnrow .primary >> nth=1")
-    path = dl.value.path(); data = open(path, "rb").read(); ok(data[:5] == b"%PDF-" and data.rstrip().endswith(b"%%EOF") and b"/DCTDecode" in data, f"passport PDF valid ({len(data)} bytes)")
-    pg.goto(U + "#/tools"); pg.locator(".tile").nth(2).click()
-    with pg.expect_file_chooser() as fc: pg.click("text=/Choose photos|फ़ोटो चुनिए और बदलिए/")
-    fc.value.set_files(os.path.join(ROOT, "icons", "icon-512.png")); pg.wait_for_selector(".rows .row"); ok("→" in pg.inner_text(".rows .row"), "image tool result: " + pg.inner_text(".rows .row").replace("\n", " "))
-    pg.goto(U + "#/tools"); pg.locator(".tile").nth(3).click()
+    data = open(dl.value.path(), "rb").read(); ok(data[:5] == b"%PDF-" and data.rstrip().endswith(b"%%EOF") and b"/DCTDecode" in data, "passport PDF valid")
+    tool("imgpdf")
     with pg.expect_file_chooser() as fc: pg.click(".tool .btnrow .ghost")
-    fc.value.set_files([os.path.join(ROOT, "icons", "icon-192.png"), os.path.join(ROOT, "icons", "icon-512.png")]); pg.wait_for_selector(".rows .row")
+    fc.value.set_files([bgimg, bgimg]); pg.wait_for_selector(".rows .row")
     with pg.expect_download() as dl: pg.click(".tool .btnrow .primary")
     d2 = open(dl.value.path(), "rb").read(); ok(d2[:5] == b"%PDF-" and d2.count(b"/Type /Page ") == 2, "images->PDF has 2 pages")
-    pg.goto(U + "#/tools"); pg.locator(".tile").nth(4).click(); pg.wait_for_selector(".tool .row"); ok("1828.80" in pg.inner_text(".tool") or "182.88" in pg.inner_text(".tool"), "size calc 6x3 ft -> cm")
-    pg.screenshot(path=f"{OUT}/tools_calc.png")
+    # compressor with target KB
+    tool("compress"); pg.fill("input[type=number] >> nth=0", "1400") if False else None
+    nums = pg.locator(".tool input[type=number]"); nums.nth(0).fill("1400"); nums.nth(2).fill("50"); nums.nth(2).dispatch_event("change"); nums.nth(0).dispatch_event("change")
+    with pg.expect_file_chooser() as fc: pg.click("text=/Choose photos|फ़ोटो चुनिए और बदलिए/")
+    fc.value.set_files(noisy); pg.wait_for_selector(".rows .row"); pg.wait_for_timeout(500)
+    with pg.expect_download() as dl: pg.click(".rows .row button")
+    sz = os.path.getsize(dl.value.path()); ok(0 < sz <= 50 * 1024, f"compress to <=50KB (got {sz} bytes from big noisy image)")
+    # enhancer
+    tool("enhance"); pick(bgimg, "text=/फ़ोटो चुनिए|Choose photo/"); pg.wait_for_timeout(300); f = grab(); im2 = Image.open(f); ok(im2.size == (400, 300), "enhance output size ok")
+    # upscale
+    tool("upscale"); pick(bgimg, "text=/फ़ोटो चुनिए|Choose photo/"); ok("400×300 → 800×600" in pg.inner_text(".tool small"), "upscale 2x: " + pg.inner_text(".tool small")); ok(Image.open(grab()).size == (800, 600), "upscale file is 800x600")
+    # crop preset
+    tool("crop"); pick(bgimg, "text=/फ़ोटो चुनिए|Choose photo/"); ok("1080×1080" in pg.inner_text(".tool small"), "crop preset 1080x1080"); ok(Image.open(grab()).size == (1080, 1080), "crop file 1080x1080")
+    # background remove (plain)
+    tool("bg"); pick(bgimg, "text=/फ़ोटो चुनिए|Choose photo/"); r = Image.open(grab()).convert("RGBA"); a = np.array(r)[:, :, 3]
+    ok(a[5, 5] == 0 and a[150, 200] == 255, f"bg removed: corner alpha {a[5,5]}, centre alpha {a[150,200]}")
+    # watermark changes pixels
+    tool("watermark"); pick(bgimg, "text=/फ़ोटो चुनिए|Choose photo/"); w = np.array(Image.open(grab()).convert("RGB")).astype(int); o = np.array(Image.open(bgimg).convert("RGB")).astype(int); ok(np.abs(w - o).sum() > 1000, "watermark drew text")
+    # QR decodes
+    tool("qr"); pg.select_option(".tool select >> nth=0", "upi"); ins = pg.locator(".tool input:not([type=color]):not([type=number])")
+    ins.nth(0).fill("test@upi"); ins.nth(1).fill("Prashant Mahto"); ins.nth(2).fill("250")
+    qp = grab(".tool .btnrow .primary >> nth=0"); qim = cv2.imread(qp); val = cv2.QRCodeDetectorAruco().detectAndDecode(qim)[0]
+    ok(val == "upi://pay?pa=test@upi&pn=Prashant%20Mahto&am=250&cu=INR", "QR PNG decodes to UPI link: " + val)
+    svg = open(grab(".tool .btnrow .primary >> nth=1")).read(); ok(svg.startswith("<svg") and "<path" in svg, "QR SVG exported")
+    # AI mode offline must fail gracefully (no network in CI/sandbox)
+    tool("bg"); pg.select_option(".tool select >> nth=0", "ai"); pick(bgimg, "text=/फ़ोटो चुनिए|Choose photo/"); pg.wait_for_timeout(1500); ok(True, "AI mode: no page crash (model itself NOT verified here: no network)")
     pg.goto(U + "#/tools"); pg.wait_for_selector(".tile"); pg.screenshot(path=f"{OUT}/tools_home.png")
     # ---- cloud mode (mock supabase)
     c = b.new_page(viewport={"width": 390, "height": 780}); c.on("pageerror", lambda e: errs.append(str(e)))

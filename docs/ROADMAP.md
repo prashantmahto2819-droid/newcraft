@@ -34,8 +34,8 @@ licences (BRIA RMBG-1.4 is non-commercial; rembg code is MIT) — check each mod
 
 | Module | Replaces | How | Status |
 |---|---|---|---|
-| Tools page (Kruti→Unicode, passport sheet, compress/convert, images→PDF, size calc) | misc. | pure JS, offline | **done 2026-11-20** |
-| Tools: QR / barcode, ID/visiting card generator, background remove (ONNX, WASM), upscale, PDF merge/split/compress, Hindi subtitles (whisper.cpp) | | JS/WASM in dashboard | next |
+| Tools page, 12 tools: background remover, enhancer, upscale, compressor (+under-KB), crop/presets, watermark, passport sheet, images→PDF, QR (URL/UPI/WhatsApp/Wi-Fi), Kruti→Unicode, rupees in words, print-size calc | misc. | pure JS, offline | **done 2026-11-20** (tested: tools/test_dashboard.py) |
+| Tools next: PDF merge/split/compress (needs pdf-lib vendored; no npm in sandbox), OCR Hindi (tesseract.js), AI upscale/enhance (ONNX), Hindi subtitles (whisper.cpp), barcode (Code128/EAN), ID/visiting-card generator, vendor transformers.js locally for the AI bg-remove (today loaded from esm.sh) | | JS/WASM in dashboard | next |
 | Tulika Layout (multi-page DTP: CMYK, bleed, crop marks, print PDF) | InDesign / PageMaker | new Rust app or mode of Vector; Scribus only as reference | planned, biggest market |
 | Tulika Audio | Audition / Audacity | Rust: cpal + symphonia + rubato + hound | planned |
 | Tulika Motion (text/shape animation, lower thirds) | After Effects (lite) | extend Film | planned |
@@ -46,3 +46,7 @@ licences (BRIA RMBG-1.4 is non-commercial; rembg code is MIT) — check each mod
 | 3D, 2D animation, font editor, screen recorder | Blender, Synfig, FontForge, OBS | link only | linked |
 
 Note: Rust modules cannot be compiled in the authoring sandbox — each needs CI runs to verify.
+
+Tools status notes (2026-11-20): AI background removal (`Xenova/modnet`, Apache-2.0, portrait only) is **experimental and untested** (sandbox has no network);
+plain-background removal, enhancer, upscale (smooth scaling + sharpen, NOT AI) are tested. Kruti→Unicode is beta (mapping from memory, rare conjuncts missing).
+QR: own encoder, byte mode, ECC M, up to 213 bytes (v1–v10); verified 160/160 version×mask combinations with OpenCV's Aruco QR decoder.
