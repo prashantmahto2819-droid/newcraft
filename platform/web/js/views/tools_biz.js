@@ -5,6 +5,7 @@ import { pickFile } from "./shared.js";
 import { L, field, note, sel, textIn } from "./tools_img.js";
 
 const FONT = '"Noto Sans Devanagari", Inter, system-ui, sans-serif';
+const fontsReady = () => Promise.all(['500 30px "Noto Sans Devanagari"', '700 30px "Noto Sans Devanagari"', '700 30px Inter'].map((f) => document.fonts.load(f))).catch(() => {});
 const paise = (v) => Math.round((parseFloat(String(v).replace(/,/g, "")) || 0) * 100);
 export const money = (p) => (p / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 // items: [{desc, qty, rate, gst}] -> exact totals in paise. interstate => IGST, otherwise CGST+SGST halves (odd paise go to CGST).
@@ -26,9 +27,9 @@ export function invoiceTool() {
     field(L("दर ₹", "Rate ₹"), textIn(it.rate, (v) => { it.rate = v; redraw(); }, { inputmode: "decimal" })), field("GST %", sel([["0", "0"], ["5", "5"], ["12", "12"], ["18", "18"], ["28", "28"]], it.gst, (v) => { it.gst = v; redraw(); })),
     items.length > 1 ? h("button.icon-btn", { "aria-label": "remove", onclick: () => { items.splice(i, 1); rowsUi(); redraw(); } }, icon("x", 16)) : null))); };
   const txt = (k, label, ph) => field(label, textIn(d[k], (v) => { d[k] = v; redraw(); }, { placeholder: ph || "" }));
-  const full = async (kind) => { const c = calc(); if (!c.rows.length) return toast(L("कम से कम एक आइटम भरिए", "Add at least one item"), "err"); const cv = draw(d, items, c, logo, 2480);
+  const full = async (kind) => { await fontsReady(); const c = calc(); if (!c.rows.length) return toast(L("कम से कम एक आइटम भरिए", "Add at least one item"), "err"); const cv = draw(d, items, c, logo, 2480);
     if (kind === "png") cv.toBlob((b) => downloadBlob(`invoice-${d.no}.png`, b)); else downloadBlob(`invoice-${d.no}.pdf`, new Blob([jpegsToPdf([{ jpeg: await canvasJpeg(cv, 0.92), w: cv.width, h: cv.height, pw: 595.28, ph: 841.89, x: 0, y: 0, iw: 595.28, ih: 841.89 }])], { type: "application/pdf" })); };
-  rowsUi(); redraw();
+  rowsUi(); redraw(); fontsReady().then(redraw);
   return h("div.form", note(L("GST बिल/इनवॉइस बनाइए (CGST+SGST या IGST अपने आप, रकम शब्दों में)। डेटा ब्राउज़र से बाहर नहीं जाता।", "Make a GST invoice (CGST+SGST or IGST automatically, amount in words). Data stays in your browser.")),
     h("div.grid2", txt("seller", L("आपकी फ़र्म", "Your business")), txt("sgstin", "GSTIN", "22AAAAA0000A1Z5"), txt("saddr", L("आपका पता", "Your address")), txt("buyer", L("ग्राहक", "Customer")), txt("bgstin", L("ग्राहक GSTIN", "Customer GSTIN")), txt("baddr", L("ग्राहक का पता", "Customer address")),
       txt("no", L("इनवॉइस नं.", "Invoice no.")), field(L("तारीख", "Date"), h("input", { type: "date", value: d.date, oninput: (e) => { d.date = e.target.value; redraw(); } })),
@@ -64,7 +65,7 @@ export function pdfStamp(loadLib, readBuf) {
   go.onclick = async () => {
     if (!file) return toast(L("पहले PDF चुनिए", "Choose a PDF first"), "err"); go.disabled = true;
     try {
-      const { PDFDocument, degrees } = await loadLib(), doc = await PDFDocument.load(await readBuf(file), { ignoreEncryption: true });
+      await fontsReady(); const { PDFDocument, degrees } = await loadLib(), doc = await PDFDocument.load(await readBuf(file), { ignoreEncryption: true });
       let src; if (mode === "text") { const c = document.createElement("canvas"), x = c.getContext("2d"), fp = 160; x.font = `700 ${fp}px ${FONT}`; const tw = Math.ceil(x.measureText(text).width) + 40; c.width = tw; c.height = fp * 1.5; x.font = `700 ${fp}px ${FONT}`; x.fillStyle = color; x.textBaseline = "middle"; x.fillText(text, 20, c.height / 2); src = c; } else { if (!img) throw new Error(L("पहले इमेज चुनिए", "Choose an image first")); src = img; }
       const png = await new Promise((r) => { const c = document.createElement("canvas"); c.width = src.width; c.height = src.height; c.getContext("2d").drawImage(src, 0, 0); c.toBlob(async (b) => r(new Uint8Array(await b.arrayBuffer())), "image/png"); });
       const emb = await doc.embedPng(png);

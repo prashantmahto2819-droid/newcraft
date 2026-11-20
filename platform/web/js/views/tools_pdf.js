@@ -9,7 +9,7 @@ const V = (p) => new URL("../../vendor/" + p, import.meta.url).href;
 let libP, jsP;
 export const loadLib = () => (libP ??= new Promise((res, rej) => { if (window.PDFLib) return res(window.PDFLib); const s = document.createElement("script"); s.src = V("pdf-lib.min.js"); s.onload = () => res(window.PDFLib); s.onerror = () => rej(new Error("pdf-lib")); document.head.append(s); }));
 const loadJs = () => (jsP ??= import(V("pdfjs/pdf.min.mjs")).then((m) => { m.GlobalWorkerOptions.workerSrc = V("pdfjs/pdf.worker.min.mjs"); return m; }));
-const openJs = async (buf) => { const m = await loadJs(); return m.getDocument({ data: buf.slice(0), standardFontDataUrl: V("pdfjs/standard_fonts/"), cMapUrl: V("pdfjs/cmaps/"), cMapPacked: true, wasmUrl: V("pdfjs/wasm/"), iccUrl: V("pdfjs/iccs/") }).promise; };
+export const openJs = async (buf) => { const m = await loadJs(); return m.getDocument({ data: buf.slice(0), standardFontDataUrl: V("pdfjs/standard_fonts/"), cMapUrl: V("pdfjs/cmaps/"), cMapPacked: true, wasmUrl: V("pdfjs/wasm/"), iccUrl: V("pdfjs/iccs/") }).promise; };
 export const readBuf = async (f) => new Uint8Array(await f.arrayBuffer());
 const busy = (btn, fn) => async () => { btn.disabled = true; const t = btn.textContent; try { await fn(); } catch (e) { console.error(e); toast(L("कुछ गड़बड़ हुई", "Something went wrong") + (e?.message ? ": " + e.message : ""), "err"); } finally { btn.disabled = false; btn.textContent = t; } };
 export function parseRanges(txt, n) { // "1-3,5,8-" -> sorted unique 0-based indices

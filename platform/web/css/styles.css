@@ -1,3 +1,5 @@
+@font-face{font-family:"Noto Sans Devanagari";src:url("../vendor/fonts/NotoSansDevanagari-VF.ttf") format("truetype");font-weight:100 900;font-stretch:62.5% 100%;font-display:swap}
+@font-face{font-family:"Inter";src:url("../vendor/fonts/Inter-VF.ttf") format("truetype");font-weight:100 900;font-display:swap}
 :root{--bg:#f6f7fb;--panel:#fff;--panel2:#f0f2f8;--text:#101828;--muted:#667085;--line:#e4e7ee;--brand:#0f766e;--brand2:#14b8a6;--danger:#dc2626;--shadow:0 1px 2px #1018280d,0 8px 24px #1018280d;--r:14px;color-scheme:light}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b1220;--panel:#121a2b;--panel2:#18223a;--text:#e8ecf5;--muted:#93a0b8;--line:#243049;--shadow:0 8px 24px #0006;color-scheme:dark}}
 :root[data-theme=dark]{--bg:#0b1220;--panel:#121a2b;--panel2:#18223a;--text:#e8ecf5;--muted:#93a0b8;--line:#243049;--shadow:0 8px 24px #0006;color-scheme:dark}
