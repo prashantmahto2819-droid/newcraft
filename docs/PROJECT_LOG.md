@@ -46,3 +46,14 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
   Windows Rust builds of photo are very slow; check the Actions tab).
 * Wasted minutes: one web dispatch built 3 apps instead of 1 because of the old matrix `include` bug (fixed).
 * Next: binary/installer renames (`vectorcraft.exe` -> tulika-vector…), Hindi catalogs for photo/pdf/film, Supabase + Pages secrets (user), trademark search (user).
+
+## 2026-11-20 — Dashboard v2 (platform/web rewritten)
+* **Verified:** photo Windows build finished successfully (run 44485358380) → all 4 apps build on all 3 OS.
+* Dashboard rewritten as dependency-free ES modules (no build step): sidebar (desktop) / bottom tab bar (mobile), dark/light/system theme,
+  Hindi/English toggle, keyboard shortcuts (`/` search, `n` new, `g`+h/p/t/b/d/s, `?`), drag-and-drop file → project, PWA (manifest, sw.js, icons).
+* Views: Home, Projects (search/filter/sort/grid-list/favourites/rename/duplicate/upload/download/delete), Templates (26 Indian-oriented sizes),
+  Brand kits (palette generator, colours-from-image, CSS/JSON export), Downloads (OS detection, install-as-app), Settings.
+* Data layer `js/store.js`: Supabase mode when `config.js` has keys, otherwise localStorage **demo mode** (`?demo` forces it).
+* Migration `0002_projects_upgrade.sql` adds `projects.favorite` and `projects.meta` — **user must run it in Supabase SQL editor**.
+* Tested with Playwright/Chromium in demo mode (desktop + mobile screenshots, no JS errors). Cloud mode untested (needs real Supabase).
+* Not done: web apps (WASM) still cannot open/save projects from Supabase (JS bridge); the dashboard's "open" just launches the app with `?project=<id>`.

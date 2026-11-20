@@ -43,4 +43,4 @@ needs to be increased"). Windows minutes count 2x and macOS 10x on private repos
 start only manually (default: Linux only) or on a `v*` tag. Fix the billing/spending limit in GitHub → Settings →
 Billing, or make the repository public (Actions are free for public repositories).
 
-Verified (see docs/PROJECT_LOG.md 2026-11-19): all four apps build on Linux and macOS and Windows except photo-on-Windows (unknown); web builds OK for vector, photo, pdf.
+Verified (see docs/PROJECT_LOG.md 2026-11-19): all four apps build on Linux and macOS and Windows (photo-on-Windows confirmed OK 2026-11-20); web builds OK for vector, photo, pdf.
