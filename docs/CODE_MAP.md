@@ -67,3 +67,5 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 * Tools: `js/views/tools.js` (TOOLS list + EXT links), `js/tools/kruti.js`, `js/tools/pdf.js`. Add a tool = add an entry to `TOOLS` with a `view()` function.
 * Image tools: `js/views/tools_img.js` (`workbench()` helper + enhance/upscale/crop/bgRemove/watermark/qr/words), pixel code in `js/tools/imaging.js`, QR in `js/tools/qr.js`, amounts in `js/tools/words.js`.
 * PDF tools: `js/views/tools_pdf.js` (merge/organise/compress/pdf→images), loaders for vendored libs in `platform/web/vendor/` (pdf-lib MIT, pdfjs-dist Apache-2.0; see vendor/README.md + LICENSE files). ZIP writer `js/tools/zip.js`. Barcodes `js/tools/barcode.js`. Visiting/ID card + barcode UI `js/views/tools_card.js`. `shared.js` has `pickFiles()` (multi-file).
+* Cloud bridge: `platform/web/bridge.js` (loaded by `apps/{vector,photo,pdf}/apps/*-web/index.html` via `../bridge.js`); active only with `?project=<id>`. Test: `tools/test_bridge.py`.
+* CI: `desktop.yml` and `web.yml` have a best-effort step that clones craft-i18n (SHA from `apps/<app>/craft-i18n.rev`) and sets `CRAFT_I18N_DIR`.

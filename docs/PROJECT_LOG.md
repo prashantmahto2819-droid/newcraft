@@ -84,3 +84,8 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 * Vendored pdf-lib 1.17.1 (MIT) and pdfjs-dist 6.2.108 (Apache-2.0) into `platform/web/vendor/` (~6 MB), licences included. New `js/tools/zip.js` (store-only ZIP).
 * Tests: `tools/test_dashboard.py` 48/48 pass. Barcodes cross-checked against reportlab (Code128 table, EAN-13 modules). Test helper now resets tool state via `#/tools` before each tool.
 * Not built yet: Hindi OCR, AI upscale, subtitles, local AI bg-remove model, Supabase bridge for web apps, Rust modules (Layout/Audio/Motion/Lab).
+
+## 2026-11-20 (night 2) — Cloud bridge + Hindi catalogs in CI
+* `platform/web/bridge.js`: with `?project=<id>` it opens the stored file in the app (`window.vectorcraft.openFile`, or a synthetic drop on the canvas for photo/pdf), watches blob downloads, auto-uploads a re-save of the same file name, offers "Keep in cloud" for exports. Script tag added to the three Trunk index.html files.
+* `tools/test_bridge.py` 9/9 pass with stub pages. NOT verified against the real wasm apps (cannot build here): check after the first web build.
+* Found: photo/pdf had no Hindi because CI never set `CRAFT_I18N_DIR`. Both workflows now clone craft-i18n best-effort (warning, never a failed build). Could not verify the repo is public from here.

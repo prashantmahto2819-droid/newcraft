@@ -12,8 +12,8 @@ Legend: **[me]** can be done in the authoring sandbox · **[user]** needs the ow
 ## B. Product work
 | # | Item | Who | Notes |
 |---|------|-----|-------|
-| 1 | Web apps open/save projects via Supabase (`?project=<id>` bridge, JS ↔ WASM file I/O) | me + ci | biggest missing feature; needs a small JS shim loaded by each Trunk `index.html` and a file-open hook in each app |
-| 2 | Hindi UI catalogs for photo / pdf / film | me + ci | vector has `hi.tsv`; copy its format |
+| 1 | Web apps open/save projects via Supabase (`?project=<id>` bridge) | me + ci | **written 2026-11-20**: `platform/web/bridge.js` (tested with stub pages: `tools/test_bridge.py`); needs a check against the real wasm apps after the first web build (vector uses `openFile`, photo/pdf get a synthetic canvas drop) |
+| 2 | Hindi UI catalogs for photo / pdf / film | me + ci | photo/pdf read storytold/craft-i18n (Hindi included): CI now clones it best-effort (2026-11-20), check the build log for the warning. film has no Hindi catalog yet |
 | 3 | Real installers (MSI / DMG / AppImage) and `tulika-*` binary names | me + ci | today CI ships zip/tar.gz with upstream binary names inside |
 | 4 | Devanagari fonts bundled in apps (Noto Sans/Serif Devanagari, Mukta, Hind) | me | check licences (OFL) and add to NOTICE |
 | 5 | Film web build (no `Trunk.toml` upstream) | me + ci | optional; desktop only for now |

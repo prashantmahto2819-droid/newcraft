@@ -60,6 +60,20 @@ jobs:
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Hindi/other UI catalogs (best effort)
+        shell: bash
+        run: |
+          # photo/pdf read translations from storytold/craft-i18n at the SHA in apps/<app>/craft-i18n.rev.
+          # Without it the UI is English only. Never fails the build: if the clone fails we ship English.
+          rev="apps/${{ matrix.app }}/craft-i18n.rev"
+          if [ -f "$rev" ]; then
+            sha="$(tr -d '[:space:]' < "$rev")"
+            if git clone -q https://github.com/storytold/craft-i18n.git "$RUNNER_TEMP/craft-i18n" && git -C "$RUNNER_TEMP/craft-i18n" checkout -q "$sha"; then
+              echo "CRAFT_I18N_DIR=$RUNNER_TEMP/craft-i18n" >> "$GITHUB_ENV"
+            else
+              echo "::warning::craft-i18n not available; ${{ matrix.app }} will be English only"
+            fi
+          fi
       - name: Free disk space (Linux)
         if: runner.os == 'Linux'
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h /
