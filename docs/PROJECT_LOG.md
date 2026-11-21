@@ -166,3 +166,7 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 - `apps/vector/crates/engine/src/tooling.rs`: new `Session::lends_whole_objects()`; with Direct Selection active and only whole point/area type or images selected (no anchors), a press is lent to the Selection tool without Cmd (reuses the upstream Cmd-lend path), so the bounding box shows, a drag moves and the corner handles scale. Type on a path and paths are unchanged.
 - Not compiled locally; web build request 3 (vector only). Upstream engine tests about Direct Selection on type/images may now differ (not run in web.yml).
 - web.yml run #14 (44902456104) green: the Direct Selection change compiles and is deployed with vector. Behaviour on screen not yet confirmed by a person.
+
+## 2026-11-21 (evening) — Discussions button removed from Film and PDF bars
+- User confirmed Film opens live in Chrome. `apps/film/crates/ui-egui/src/header.rs` and `apps/pdf/crates/ui-egui/src/chrome.rs`: header "GitHub Discussions" button removed (Help menu link kept). Film test `tests/it/links_ui.rs` still expects `header.discord` (not run in web.yml). Vector's title-bar button (community.rs, tied to width layout) left in place.
+- Film already ships colour grading: panel "Color Grading" (basic, creative/LUT, RGB + hue/sat curves, 3 colour wheels, HSL secondary, vignette) and "Video Scopes"; workspace "Color". Build request 4 (film, pdf).

@@ -1,2 +1,2 @@
-["vector"]
-# line 1: JSON list of apps to build (vector, photo, pdf, film). Changing this file on main starts web.yml. request 3
+["film","pdf"]
+# line 1: JSON list of apps to build (vector, photo, pdf, film). Changing this file on main starts web.yml. request 4
