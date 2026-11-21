@@ -226,6 +226,28 @@ impl Session {
     /// object (#3901; <https://community.adobe.com/t5/illustrator-discussions/handles-disappar-on-shape-with-direct-selection-tool/m-p/14848662>).
     /// Perspective Selection keeps Cmd+Alt drags to copy objects on their perspective plane.
     /// None for the other selection tools and the view tools.
+    /// Tulika (CorelDRAW-style): Direct Selection with only whole point/area type or images selected
+    /// (no anchors picked) lends the Selection tool without Cmd, so a drag moves the object and its
+    /// bounding-box corners scale it, as the Pick tool does.
+    fn lends_whole_objects(&self) -> bool {
+        use vectorcraft_doc::{NodeKind, TextKind};
+        if self.tool.id() != "directSelection" {
+            return false;
+        }
+        let Some(st) = self.active() else { return false };
+        let sel = &st.selection;
+        !sel.objects.is_empty()
+            && sel.anchors.is_empty()
+            && sel.segments.is_empty()
+            && sel.objects.iter().all(|&id| {
+                st.doc.node(id).is_some_and(|n| match &n.kind {
+                    NodeKind::Image(_) => true,
+                    NodeKind::Text(t) => matches!(t.kind, TextKind::Point | TextKind::Area { .. }),
+                    _ => false,
+                })
+            })
+    }
+
     fn lent_tool(&self, id: &str, mods: &Mods) -> Option<&'static str> {
         use vectorcraft_tools::catalog::{edits_anchors, is_selection_tool};
         if matches!(id, "hand" | "zoom" | "rotateView") {
@@ -233,6 +255,9 @@ impl Session {
         }
         if id == "directSelection" && mods.cmd {
             return Some(if mods.alt { "groupSelection" } else { "selection" });
+        }
+        if id == "directSelection" && self.lends_whole_objects() {
+            return Some("selection");
         }
         if id == "perspectiveSelection" && mods.cmd && mods.alt {
             return None;
@@ -247,7 +272,7 @@ impl Session {
     /// ([`Self::lend_selection_tool`]), as [`Self::cursor`] shows it: the canvas also shows what
     /// that tool shows (Direct Selection with Cmd held shows the bounding box).
     pub fn lent_tool_id(&self, mods: &Mods) -> Option<&'static str> {
-        if !mods.cmd || self.lender.is_some() {
+        if !(mods.cmd || self.lends_whole_objects()) || self.lender.is_some() {
             return None;
         }
         self.lent_tool(self.tool.id(), mods)
@@ -258,7 +283,7 @@ impl Session {
     /// not Select Behind). The tool lent to stays as it was, unaware, until the release. → the event
     /// for the tool, and the warnings of a preview that keeping the typing applied.
     fn lend_selection_tool(&mut self, ev: &PointerEvent) -> Result<(PointerEvent, Vec<String>)> {
-        if ev.kind != PointerKind::Down || !ev.mods.cmd || self.lender.is_some() {
+        if ev.kind != PointerKind::Down || !(ev.mods.cmd || self.lends_whole_objects()) || self.lender.is_some() {
             return Ok((*ev, vec![]));
         }
         let Some(id) = self.lent_tool(self.tool.id(), &ev.mods) else { return Ok((*ev, vec![])) };
@@ -1264,7 +1289,7 @@ impl Session {
     /// press would borrow ([`Self::lend_selection_tool`]).
     pub fn cursor(&mut self, p: Point, mods: Mods, view: ViewInfo) -> Cursor {
         // While an edit is computed, a Cmd press is held for the active tool, which shows it is busy.
-        let lent = if mods.cmd && self.lender.is_none() && !self.tool_editing() { self.lent_tool(self.tool.id(), &mods) } else { None };
+        let lent = if (mods.cmd || self.lends_whole_objects()) && self.lender.is_none() && !self.tool_editing() { self.lent_tool(self.tool.id(), &mods) } else { None };
         let c = match lent {
             Some(id) => {
                 let lent = self.make_tool(id);
