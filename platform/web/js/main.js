@@ -5,6 +5,7 @@ import { importFiles, newProjectModal } from "./views/shared.js";
 import { applyTheme, getTheme, shortcutsModal } from "./views/settings.js";
 
 const ROUTES = { home: ["nav_home", "home"], projects: ["nav_projects", "folder"], templates: ["nav_templates", "grid"], brand: ["nav_brand", "palette"], tools: ["nav_tools", "wand"], downloads: ["nav_downloads", "download"], settings: ["nav_settings", "settings"] };
+const HIDDEN = { editor: ["nav_templates", "grid"] };
 const KEYS = { h: "home", p: "projects", t: "templates", b: "brand", x: "tools", d: "downloads", s: "settings" };
 const ctx = { store: null, user: null, projects: [], refresh, rerender, relayout };
 let root, main, route = "home";
@@ -14,11 +15,11 @@ async function refresh() { await load(); await rerender(); }
 async function rerender() {
   const y = main.scrollTop;
   try { const v = await import(`./views/${route}.js`); const el = await v.render(ctx); main.textContent = ""; main.append(el); } catch (e) { console.error(e); main.textContent = ""; main.append(h("div.empty", h("b", t("error")), h("small", String(e.message || e)))); }
-  main.scrollTop = y; document.title = `${t(ROUTES[route][0])} · Tulika`;
-  root.querySelectorAll("[data-route]").forEach((a) => a.classList.toggle("on", a.dataset.route === route));
+  main.scrollTop = y; document.title = `${t((ROUTES[route] || HIDDEN[route])[0])} · Tulika`;
+  root.querySelectorAll("[data-route]").forEach((a) => a.classList.toggle("on", a.dataset.route === (route === "editor" ? "templates" : route)));
 }
 function relayout() { document.documentElement.lang = getLang(); buildShell(); rerender(); }
-const parse = () => { const r = location.hash.replace(/^#\/?/, "").split("?")[0].split("/")[0]; return ROUTES[r] ? r : "home"; };
+const parse = () => { const r = location.hash.replace(/^#\/?/, "").split("?")[0].split("/")[0]; return ROUTES[r] || HIDDEN[r] ? r : "home"; };
 
 function buildShell() {
   root.textContent = "";

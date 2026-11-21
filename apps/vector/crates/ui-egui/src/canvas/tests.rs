@@ -7133,6 +7133,8 @@ fn zoom_with_mouse_wheel_preference() {
         (after.zoom / before.zoom, (after.center - before.center) * after.zoom, moved)
     };
     let zooms_in = |(zoom, _, moved): (f64, _, f64)| zoom > 1.01 && moved < 1e-6;
+    // Tulika turns Zoom with Mouse Wheel on by default; this test starts from the upstream default (off).
+    app.session.execute("prefs.set", &json!({"key": "zoomWithMouseWheel", "value": false})).unwrap();
     let (zoom, scroll, _) = turn(&mut app, "");
     assert!((zoom - 1.0).abs() < 1e-9 && scroll.x == 0.0 && scroll.y < -1.0, "off: the wheel scrolls up ({zoom}, {scroll:?})");
     // General › Scroll Sideways with Cmd/Ctrl + Wheel is on by default.

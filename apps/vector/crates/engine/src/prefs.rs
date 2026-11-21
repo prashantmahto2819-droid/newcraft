@@ -446,7 +446,7 @@ impl Default for Prefs {
             transform_pattern_tiles: false,
             scale_corners: false,
             scale_strokes: false,
-            zoom_with_mouse_wheel: false,
+            zoom_with_mouse_wheel: true, // Tulika: CorelDRAW-style, the wheel zooms about the pointer
             ctrl_wheel_scrolls_sideways: true,
             scrub_numeric_fields: true,
             trackpad_rotate_view: true,

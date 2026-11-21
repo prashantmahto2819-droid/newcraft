@@ -1,4 +1,5 @@
 // Static catalogue: apps and templates. Sizes are in the unit given (px, mm, in, ft).
+import { FESTIVAL_TEMPLATES } from "./designs.js";
 export const APPS = {
   vector: { color: "#14b8a6", color2: "#0f766e", web: "vector/", exts: ["svg", "vectorcraft", "eps", "ai", "cdr", "dxf"], descKey: "app_vector", name: "Tulika Vector" },
   photo:  { color: "#f43f8e", color2: "#9d174d", web: "photo/",  exts: ["psd", "psb", "pcraft", "png", "jpg", "jpeg", "webp", "tif", "tiff", "bmp"], descKey: "app_photo", name: "Tulika Photo" },
@@ -33,11 +34,12 @@ export const TEMPLATES = [
   T("shok", "india", "शोक पत्र (A5)", "Condolence letter (A5)", 148, 210, "mm", "vector"),
   T("stamp", "india", "रबर स्टैम्प / सील (40 मिमी)", "Rubber stamp / seal (40 mm)", 40, 40, "mm", "vector"),
   T("sticker", "india", "स्टिकर 4×4 इंच", "Sticker 4×4 in", 4, 4, "in", "vector"),
+  ...FESTIVAL_TEMPLATES.map(([id, hi, en, w, h]) => T(id, "festival", hi, en, w, h, "px", "photo")),
   T("hd", "video", "फुल HD वीडियो", "Full HD video", 1920, 1080, "px", "film"),
   T("vertical", "video", "वर्टिकल वीडियो", "Vertical video", 1080, 1920, "px", "film"),
   T("4k", "video", "4K वीडियो", "4K video", 3840, 2160, "px", "film"),
 ];
-export const TEMPLATE_CATS = ["social", "print", "business", "india", "video"];
+export const TEMPLATE_CATS = ["festival", "social", "print", "business", "india", "video"];
 
 export const FONTS = ["Noto Sans Devanagari", "Noto Serif Devanagari", "Mukta", "Hind", "Poppins", "Tiro Devanagari Hindi", "Yatra One", "Kalam", "Baloo 2", "Rozha One", "Laila", "Inter", "Playfair Display"];
 export const RELEASES_URL = "https://github.com/prashantmahto2819-droid/newcraft/releases";

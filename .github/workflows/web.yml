@@ -81,7 +81,7 @@ jobs:
         with:
           name: web-${{ matrix.app }}
           path: apps/${{ matrix.app }}/dist/web
-          retention-days: 14
+          retention-days: 90
 
   deploy:
     needs: build

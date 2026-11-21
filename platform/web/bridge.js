@@ -26,6 +26,26 @@ function pill() {
   return el;
 }
 
+// A new project made from a template has no file yet. Make an empty document of the chosen size so the app opens
+// at that size instead of showing its own default "New document" size (Letter). vector: blank SVG; photo: blank PNG.
+const PX = { px: 1, mm: 96 / 25.4, in: 96, ft: 1152, pt: 96 / 72 };
+async function blankDoc(project) {
+  const m = project.meta || {}; if (!m.w || !m.h) return null;
+  const k = PX[m.unit] || 1, w = Math.max(1, Math.round(m.w * k)), h = Math.max(1, Math.round(m.h * k));
+  const base = String(project.name || "Untitled").replace(/[\\/:*?"<>|]+/g, "_");
+  if (appKey === "vector") {
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"></svg>`;
+    return { name: base + ".svg", blob: new Blob([svg], { type: "image/svg+xml" }) };
+  }
+  if (appKey === "photo") {
+    const cap = Math.min(1, 8000 / Math.max(w, h)), cw = Math.round(w * cap), ch = Math.round(h * cap);
+    const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch; const x = cv.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, cw, ch);
+    const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
+    return blob ? { name: base + ".png", blob } : null;
+  }
+  return null;
+}
+
 async function main() {
   if (!projectId) return;
   if (!window.TULIKA_CONFIG) {
@@ -74,6 +94,7 @@ async function main() {
   // Open the stored file once the app is ready.
   let f = null;
   try { f = await store.fileBlob(projectId); } catch (e) { console.error(e); }
+  if (!f) f = await blankDoc(project);
   if (!f) { status(T("नया प्रोजेक्ट", "new project")); return; }
   const bytes = new Uint8Array(await f.blob.arrayBuffer());
   const api = () => window[appKey + "craft"];
