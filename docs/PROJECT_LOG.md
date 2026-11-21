@@ -142,3 +142,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-21 (later) — Editor: gradient, shadow, align
 - `designs.js` layerSvg now supports per-layer gradient fill (`g2`, `ga`) and drop shadow (`sh`); `editor.js` panel gained gradient/shadow controls and align-to-page buttons (left/centre/right/top/middle/bottom). Tests: 101 PASS.
+
+## 2026-11-21 (sweep) — all-tools audit
+- New tools/audit_tools.py: opens every page and all tools in HI and EN, clicks up to 25 safe buttons per page, records JS errors / failed requests / empty pages. Result: 0 JS errors, 0 empty pages; only local 404 for config.js (generated at deploy by assemble_site.sh, expected).
