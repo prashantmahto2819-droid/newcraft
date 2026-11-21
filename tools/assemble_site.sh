@@ -2,7 +2,7 @@
 # Builds the ./site folder that CI uploads to Cloudflare Pages.
 #   platform/web (dashboard + tools)  +  <artifacts>/web-<app> for each wasm app  +  config.js
 # Cloudflare Pages rejects any single file over 25 MiB. An app that has no build or has a file over
-# the limit is replaced by a small "not available yet" page so the rest of the site still deploys.
+# the limit goes to R2 instead (see below); an app with no build gets a small placeholder page.
 # Usage: tools/assemble_site.sh [artifacts_dir]   (env: SUPABASE_URL, SUPABASE_ANON_KEY)
 set -euo pipefail
 art="${1:-artifacts}"
@@ -24,16 +24,32 @@ stub() {
 HTML
 }
 
+# Files over the limit are not put in ./site. They are listed in site/r2-manifest.json and left in
+# ./r2out/<app>/<path> for tools/upload_big.sh (Cloudflare R2). functions/[[path]].js serves them
+# from R2 at the same URL, so the apps need no URL rewriting.
+rm -rf r2out && mkdir -p r2out
+: > r2out/.keys
 for a in vector photo pdf; do
   src="$art/web-$a"
   if [ ! -d "$src" ]; then echo "::notice::$a: no build in this run, placeholder page used"; stub "$a"; continue; fi
-  big="$(find "$src" -type f -size +"${limit}"c -print -quit)"
-  if [ -n "$big" ]; then
-    echo "::warning::$a skipped: $(basename "$big") is over the 25 MiB Cloudflare Pages file limit"
-    stub "$a"; continue
-  fi
-  mkdir -p "site/$a" && cp -R "$src/." "site/$a/"
+  mkdir -p "site/$a"
+  while IFS= read -r -d '' f; do
+    rel="${f#"$src"/}"
+    if [ "$(stat -c %s "$f")" -gt "$limit" ]; then
+      mkdir -p "r2out/$a/$(dirname "$rel")"; cp "$f" "r2out/$a/$rel"
+      echo "$a/$rel" >> r2out/.keys
+      echo "::notice::$a/$rel is over 25 MiB: goes to R2"
+    else
+      mkdir -p "site/$a/$(dirname "$rel")"; cp "$f" "site/$a/$rel"
+    fi
+  done < <(find "$src" -type f -print0)
 done
+python3 - <<'PY2'
+import json
+keys = [k for k in open("r2out/.keys").read().split("\n") if k]
+json.dump(keys, open("site/r2-manifest.json", "w"))
+json.dump({"version": 1, "include": ["/vector/*", "/photo/*", "/pdf/*"], "exclude": []}, open("site/_routes.json", "w"))
+PY2
 
 printf 'window.TULIKA_CONFIG = { supabaseUrl: %s, supabaseAnonKey: %s };\n' \
   "$(printf '%s' "${SUPABASE_URL:-}" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))')" \

@@ -1,0 +1,9 @@
+# Used only by `wrangler pages deploy` in CI (web.yml / site.yml): binds the R2 bucket that holds
+# the wasm files over 25 MiB (Cloudflare Pages file limit) to functions/[[path]].js.
+name = "tulika"
+pages_build_output_dir = "site"
+compatibility_date = "2024-11-01"
+
+[[r2_buckets]]
+binding = "BIG"
+bucket_name = "tulika-assets"

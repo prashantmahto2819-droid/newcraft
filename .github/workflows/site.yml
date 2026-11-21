@@ -1,12 +1,19 @@
-name: Site only deploy (dashboard + tools, no wasm builds)
-# Deploys platform/web to Cloudflare Pages in about a minute. The three wasm apps are replaced by
-# placeholder pages (use "Web build and deploy" for the full site). Runs by hand or on a push that
-# changes platform/web. Needs the same secrets and DEPLOY_PAGES variable as web.yml.
+name: Site only deploy (dashboard + tools; optionally reuse a finished web build)
+# Deploys platform/web to Cloudflare Pages in about a minute, without compiling anything.
+# Optional input artifacts_run_id: the id of a finished "Web build and deploy" run (the number in its
+# URL, artifacts are kept 14 days). Its vector/photo/pdf builds are then added to the site, and files
+# over 25 MiB go to R2. Without it the three apps are placeholder pages.
+# Runs by hand or on a push that changes platform/web. Needs the same secrets and DEPLOY_PAGES variable.
 on:
   workflow_dispatch:
+    inputs:
+      artifacts_run_id:
+        description: 'Optional: run id of a finished web build to reuse (e.g. 44885769819)'
+        required: false
+        default: ''
   push:
     branches: [main]
-    paths: ["platform/web/**", "tools/assemble_site.sh", ".github/workflows/site.yml"]
+    paths: ["platform/web/**", "functions/**", "wrangler.toml", "tools/assemble_site.sh", "tools/upload_big.sh", ".github/workflows/site.yml"]
 
 concurrency:
   group: site-deploy
@@ -18,11 +25,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        if: ${{ inputs.artifacts_run_id != '' }}
+        with:
+          path: artifacts
+          run-id: ${{ inputs.artifacts_run_id }}
+          github-token: ${{ github.token }}
       - name: Assemble site
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: tools/assemble_site.sh artifacts-none
+        run: tools/assemble_site.sh artifacts
+      - name: Upload files over 25 MiB to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: tools/upload_big.sh
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
