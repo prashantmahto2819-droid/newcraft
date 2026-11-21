@@ -17,6 +17,16 @@ const SAVE_FAILED_TITLE: &str = "Preferences can't be saved";
 /// preferences revision is already handed over, the store and the autosave timer have nothing
 /// due at the same `now`, and the autosave results were drained by the first call.
 pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context, now: Instant) {
+    tick_at(app, ctx, Some(now));
+}
+
+/// [`tick`] where there is no clock to read (the web build, where `Instant::now()` panics): the
+/// preferences are still stored on change; the timed autosave does not run.
+pub fn tick_without_clock(app: &mut PhotocraftApp, ctx: &egui::Context) {
+    tick_at(app, ctx, None);
+}
+
+fn tick_at(app: &mut PhotocraftApp, ctx: &egui::Context, now: Option<Instant>) {
     if !app.prefs_rt.loaded {
         load(app);
     }
@@ -30,7 +40,10 @@ pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context, now: Instant) {
     app.sync_recent();
     #[cfg(not(target_arch = "wasm32"))]
     super::agents::sync_agent_link(app, ctx);
-    let save_at = store_preferences(app, now);
+    #[cfg(not(target_arch = "wasm32"))]
+    let save_at = now.and_then(|now| store_preferences(app, now));
+    #[cfg(target_arch = "wasm32")]
+    let save_at = store_preferences(app);
     let style = canvas_style(app);
     if let Some(gpu) = app.gpu.as_ref()
         && app.prefs_rt.gpu_style != Some(style)
@@ -38,9 +51,11 @@ pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context, now: Instant) {
         gpu.set_style(style);
         app.prefs_rt.gpu_style = Some(style);
     }
-    autosave(app, now);
-    if let Some(at) = [save_at, app.autosave.deadline()].into_iter().flatten().min() {
-        ctx.request_repaint_after(at.saturating_duration_since(now));
+    if let Some(now) = now {
+        autosave(app, now);
+        if let Some(at) = [save_at, app.autosave.deadline()].into_iter().flatten().min() {
+            ctx.request_repaint_after(at.saturating_duration_since(now));
+        }
     }
     #[cfg(not(target_arch = "wasm32"))]
     link_updates(app, ctx);
@@ -89,7 +104,7 @@ fn store_preferences(app: &mut PhotocraftApp, now: Instant) -> Option<Instant> {
 /// The web build saves through `Services::save_prefs` (browser storage) until it opens its own
 /// settings store (FW-264): the whole document on every change, no retry.
 #[cfg(target_arch = "wasm32")]
-fn store_preferences(app: &mut PhotocraftApp, _now: Instant) -> Option<Instant> {
+fn store_preferences(app: &mut PhotocraftApp) -> Option<Instant> {
     let rev = app.session.prefs.rev();
     if rev == app.prefs_rt.saved_rev {
         return None;

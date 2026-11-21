@@ -88,7 +88,7 @@ impl PhotocraftApp {
         // So does selecting another layer or document by any route (#6483).
         type_tool::end_if_left(self);
         transform_tool::end_if_left(self);
-        prefs_ui::tick(self, ctx, std::time::Instant::now());
+        prefs_tick(self, ctx);
         updates_ui::tick(self);
         monitor_status::poll_frame(self, ctx, frame);
         // Control requests and persisted preferences can change the language in this frame.
@@ -275,4 +275,17 @@ impl PhotocraftApp {
         self.automation_input = false;
         native_menu::sync(self, &ctx);
     }
+}
+
+/// One upkeep pass of the preferences and autosave timers for this frame.
+#[cfg(not(target_arch = "wasm32"))]
+fn prefs_tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
+    prefs_ui::tick(app, ctx, std::time::Instant::now());
+}
+
+/// Tulika: on the web `std::time::Instant::now()` panics ("time not implemented on this platform"),
+/// which stopped the app on its first frame; the pass runs without a clock there.
+#[cfg(target_arch = "wasm32")]
+fn prefs_tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
+    prefs_ui::tick_without_clock(app, ctx);
 }
