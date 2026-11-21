@@ -165,3 +165,4 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 ## 2026-11-21 (vector pick behaviour) — Direct Selection acts like the Pick tool on text and images
 - `apps/vector/crates/engine/src/tooling.rs`: new `Session::lends_whole_objects()`; with Direct Selection active and only whole point/area type or images selected (no anchors), a press is lent to the Selection tool without Cmd (reuses the upstream Cmd-lend path), so the bounding box shows, a drag moves and the corner handles scale. Type on a path and paths are unchanged.
 - Not compiled locally; web build request 3 (vector only). Upstream engine tests about Direct Selection on type/images may now differ (not run in web.yml).
+- web.yml run #14 (44902456104) green: the Direct Selection change compiles and is deployed with vector. Behaviour on screen not yet confirmed by a person.
