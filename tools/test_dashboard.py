@@ -56,6 +56,14 @@ with sync_playwright() as p:
     n0 = pg.locator(".edcanvas svg [data-id]").count(); pg.click(".edpanel .btnrow .ghost >> nth=0"); pg.wait_for_timeout(250)
     ok(pg.locator(".edcanvas svg [data-id]").count() == n0 + 1, "editor: add text layer")
     pg.click("button[title='Ctrl+Z']"); pg.wait_for_timeout(250); ok(pg.locator(".edcanvas svg [data-id]").count() == n0, "editor: undo")
+    # photo layer
+    import zlib as _z, struct as _s
+    def _ck(t, b): return _s.pack(">I", len(b)) + t + b + _s.pack(">I", _z.crc32(t + b) & 0xffffffff)
+    open("/tmp/_ph.png", "wb").write(b"\x89PNG\r\n\x1a\n" + _ck(b"IHDR", _s.pack(">IIBBBBB", 8, 4, 8, 2, 0, 0, 0)) + _ck(b"IDAT", _z.compress(b"".join(b"\x00" + b"\xff\x80\x20" * 8 for _ in range(4)))) + _ck(b"IEND", b""))
+    with pg.expect_file_chooser() as fc: pg.click(".edpanel button[title='Add photo'], .edpanel button[title='फ़ोटो जोड़ें']")
+    fc.value.set_files("/tmp/_ph.png"); pg.wait_for_timeout(500)
+    ok(pg.locator(".edcanvas svg image[data-id]").count() == 1, "editor: photo layer added")
+    pg.click("button[title='Ctrl+Z']"); pg.wait_for_timeout(250)
     # gradient / shadow / align
     pg.locator(".edcanvas svg text").first.click(); pg.wait_for_timeout(200)
     pg.locator(".edpanel label.fld:has-text('Shadow'), .edpanel label.fld:has-text('छाया')").first.locator("input").check(); pg.wait_for_timeout(250)

@@ -145,6 +145,7 @@ const fam = (f) => `'${f}','Noto Sans Devanagari',sans-serif`;
 
 function baseSvg(l) {
   const op = l.op ?? 1, tf = l.rot ? ` transform="rotate(${l.rot} ${l.x} ${l.y})"` : "", d = `data-id="${l.id}"`;
+  if (l.t === "rect" && l.img) return `<clipPath id="c-${l.id}"><rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" rx="${l.rx || 0}"/></clipPath><image ${d} x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" href="${l.img}" preserveAspectRatio="xMidYMid slice" clip-path="url(#c-${l.id})" opacity="${op}"${tf}/>`;
   if (l.t === "rect") return `<rect ${d} x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" rx="${l.rx || 0}" fill="${l.fill}" ${l.stroke ? `stroke="${l.stroke}" stroke-width="${l.sw || 2}"` : ""} opacity="${op}"${tf}/>`;
   if (l.t === "circle") return `<circle ${d} cx="${l.x}" cy="${l.y}" r="${l.r}" fill="${l.fill}" opacity="${op}"/>`;
   if (l.t === "ring") return `<circle ${d} cx="${l.x}" cy="${l.y}" r="${l.r}" fill="none" stroke="${l.stroke}" stroke-width="${l.sw || 4}" opacity="${op}"/>`;
@@ -160,7 +161,7 @@ function baseSvg(l) {
 // gradient fill (l.g2 second colour, l.ga angle) and drop shadow (l.sh = {c,b,x,y}) are layered on top of the plain shapes
 export function layerSvg(l) {
   let defs = "", L2 = l;
-  if (l.g2 && l.fill && l.fill !== "none" && l.t !== "ring") {
+  if (l.g2 && l.fill && l.fill !== "none" && l.t !== "ring" && !l.img) {
     defs += `<linearGradient id="g-${l.id}" gradientTransform="rotate(${l.ga ?? 90} .5 .5)"><stop offset="0" stop-color="${l.fill}"/><stop offset="1" stop-color="${l.g2}"/></linearGradient>`;
     L2 = { ...l, fill: `url(#g-${l.id})` };
   }

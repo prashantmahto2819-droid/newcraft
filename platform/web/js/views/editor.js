@@ -75,6 +75,16 @@ export async function render(ctx) {
   function del() { d.layers = d.layers.filter((l) => l.id !== sel); sel = null; commit(); draw(); panelRender(); }
   function dup() { const l = layer(); if (!l) return; const c = clone(l); c.id = rid(); if (c.x != null) { c.x += 24; c.y += 24; } d.layers.push(c); sel = c.id; commit(); draw(); panelRender(); }
   function order(dir) { const i = d.layers.findIndex((l) => l.id === sel); const j = i + dir; if (i < 0 || j < 0 || j >= d.layers.length) return; [d.layers[i], d.layers[j]] = [d.layers[j], d.layers[i]]; commit(); draw(); }
+  function addPhoto() {
+    const inp = h("input", { type: "file", accept: "image/*" });
+    inp.onchange = async () => {
+      const f = inp.files[0]; if (!f) return; let bmp; try { bmp = await createImageBitmap(f); } catch { alert(L("यह फ़ोटो खुल नहीं सकी। JPG या PNG चुनिए।", "This photo could not be opened. Choose a JPG or PNG.")); return; } const k = Math.min(1, 1400 / Math.max(bmp.width, bmp.height));
+      const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k); cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+      const img = /png|webp|gif|svg/.test(f.type) ? cv.toDataURL("image/png") : cv.toDataURL("image/jpeg", 0.88);
+      const w = Math.round(d.W * 0.6), hh = Math.round(w * cv.height / cv.width), id = rid();
+      d.layers.push({ id, t: "rect", img, x: Math.round((d.W - w) / 2), y: Math.round((d.H - hh) / 2), w, h: hh, fill: "#ffffff", op: 1, rx: 0 }); sel = id; commit(); draw(); panelRender();
+    }; inp.click();
+  }
   function add(kind) {
     const W = d.W, H = d.H, id = rid(); let l;
     if (kind === "text") l = { id, t: "text", text: L("यहाँ लिखें", "Type here"), x: W / 2, y: H / 2, size: Math.round(Math.min(W, H) * 0.1), fill: "#111827", font: "Noto Sans Devanagari", weight: 700, op: 1, rot: 0 };
@@ -88,7 +98,7 @@ export async function render(ctx) {
   const row = (label, ...c) => h("label.fld", label, ...c);
   const colour = (val, fn) => h("input", { type: "color", value: /^#[0-9a-f]{6}$/i.test(val) ? val : "#000000", oninput: (e) => { fn(e.target.value); draw(); }, onchange: commit });
   const range = (min, max, val, fn, step = 1) => h("input", { type: "range", min, max, step, value: val, oninput: (e) => { fn(+e.target.value); schedule(); }, onchange: commit });
-  const name = (l) => l.t === "text" ? String(l.text).split("\n")[0].slice(0, 22) || "…" : { rect: L("आयत", "Rectangle"), circle: L("गोला", "Circle"), ring: L("रिंग", "Ring"), poly: L("आकार", "Shape"), path: L("लहर", "Wave") }[l.t];
+  const name = (l) => l.img ? L("फ़ोटो", "Photo") : l.t === "text" ? String(l.text).split("\n")[0].slice(0, 22) || "…" : { rect: L("आयत", "Rectangle"), circle: L("गोला", "Circle"), ring: L("रिंग", "Ring"), poly: L("आकार", "Shape"), path: L("लहर", "Wave") }[l.t];
   function layersRender() {
     layersBox.textContent = "";
     for (const l of [...d.layers].reverse()) layersBox.append(h("button.edlayer" + (l.id === sel ? ".on" : ""), { type: "button", onclick: () => { sel = l.id; draw(); panelRender(); } }, h("small", l.t === "text" ? "T" : l.t === "rect" ? "▭" : l.t === "circle" ? "●" : l.t === "ring" ? "◯" : "◆"), h("span", name(l))));
@@ -104,7 +114,7 @@ export async function render(ctx) {
     const l = layer(); panel.textContent = "";
     panel.append(
       h("section.card", h("h3", L("पृष्ठभूमि", "Background")), h("div.grid2", row(L("रंग 1", "Colour 1"), colour(d.bg[0], (v) => (d.bg[0] = v))), row(L("रंग 2", "Colour 2"), colour(d.bg[1], (v) => (d.bg[1] = v)))), row(L("ढलान", "Angle"), range(0, 360, d.bg[2] ?? 135, (v) => (d.bg[2] = v)))),
-      h("section.card", h("h3", L("जोड़ें", "Add")), h("div.btnrow", [["text", "T " + L("टेक्स्ट", "Text")], ["rect", "▭"], ["circle", "●"], ["ring", "◯"]].map(([k, lb]) => h("button.ghost", { onclick: () => add(k) }, lb)))),
+      h("section.card", h("h3", L("जोड़ें", "Add")), h("div.btnrow", [["text", "T " + L("टेक्स्ट", "Text")], ["rect", "▭"], ["circle", "●"], ["ring", "◯"]].map(([k, lb]) => h("button.ghost", { onclick: () => add(k) }, lb)).concat(h("button.ghost", { title: L("फ़ोटो जोड़ें", "Add photo"), onclick: addPhoto }, "🖼")))),
     );
     if (l) {
       const f = [];

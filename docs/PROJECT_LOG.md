@@ -145,3 +145,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-21 (sweep) — all-tools audit
 - New tools/audit_tools.py: opens every page and all tools in HI and EN, clicks up to 25 safe buttons per page, records JS errors / failed requests / empty pages. Result: 0 JS errors, 0 empty pages; only local 404 for config.js (generated at deploy by assemble_site.sh, expected).
+
+## 2026-11-21 (photo layer) — Editor: add your own photo
+- `editor.js` addPhoto(): picks an image, downsizes to 1400 px, stores it as a `rect` layer with `img` (data URL); `designs.js` renders it as a clipped `<image>` (rounded corners via `rx`), so move/resize/shadow/opacity/export all work. Unreadable files show a message. Tests: 102 PASS, 0 FAIL.
