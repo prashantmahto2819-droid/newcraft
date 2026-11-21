@@ -151,6 +151,17 @@ pub fn install() -> Result<(), JsValue> {
         })
         .into_js_value(),
     )?;
+    // Tulika: register a font file (TTF/OTF bytes) for titles and captions; returns the number of
+    // faces added. The page loads the site's font library through this after start.
+    set_fn(
+        &obj,
+        "addFont",
+        Closure::<dyn Fn(JsValue) -> JsValue>::new(|data: JsValue| {
+            let bytes = js_sys::Uint8Array::new(&data).to_vec();
+            JsValue::from_f64(filmcraft_text::fonts::add_font_data(bytes).len() as f64)
+        })
+        .into_js_value(),
+    )?;
     set_fn(
         &obj,
         "files",

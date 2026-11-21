@@ -77,6 +77,22 @@
       window.filmcraftLoad.wasmMs = performance.now() - t0;
       await start("filmcraft_canvas");
       window.filmcraftLoad.readyMs = performance.now() - t0;
+      // Tulika: load the site's font library (Hindi and display fonts, all OFL) in the background,
+      // one file at a time, so titles and captions can use them. Absent when served on its own.
+      (async () => {
+        try {
+          const base = new URL("../vendor/fonts/", location.href);
+          const list = await (await fetch(new URL("list.json", base))).json();
+          let n = 0;
+          for (const f of list) {
+            try {
+              const r = await fetch(new URL(f, base));
+              if (r.ok) n += window.filmcraft.addFont(new Uint8Array(await r.arrayBuffer()));
+            } catch (e) { /* skip one bad file */ }
+            window.filmcraftLoad.fonts = n;
+          }
+        } catch (e) { /* no font library next to this build */ }
+      })();
     } catch (e) {
       const text = String(e && e.stack || e);
       window.filmcraftLoad.error = String(e);

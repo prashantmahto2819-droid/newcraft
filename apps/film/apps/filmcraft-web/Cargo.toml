@@ -21,6 +21,7 @@ filmcraft-engine = { workspace = true }
 craft-web-api = { git = "https://github.com/storytold/craft-libs", rev = "df469bb2bd2cc026ad25a34f65954ccbb46909d6", version = "0.1.0" }
 craft-web-host = { git = "https://github.com/storytold/craft-libs", rev = "df469bb2bd2cc026ad25a34f65954ccbb46909d6", version = "0.1.0" }
 filmcraft-ui-egui = { workspace = true }
+filmcraft-text = { workspace = true }
 filmcraft-media = { workspace = true }
 filmcraft-codecs = { workspace = true }
 filmcraft-frame = { workspace = true }

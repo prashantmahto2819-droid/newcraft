@@ -81,3 +81,4 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 - tools/audit_lang.py — EN/HI leftover-text audit; js/data/fonts_all.js, js/views/fontpicker.js — font catalogue and picker; tools/vendor_fonts.py — vendors extra OFL fonts.
 - tools/audit_tools.py — sweep of every route/tool for JS errors (HI+EN).
 - .github/web-build.request — edit + push to start web.yml for the listed apps.
+- platform/web/vendor/fonts/list.json — font files Film web loads at start through window.filmcraft.addFont.
