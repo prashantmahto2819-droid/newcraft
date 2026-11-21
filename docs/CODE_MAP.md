@@ -80,3 +80,4 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 * Template designs/editor: `js/data/designs.js` (specs + renderer + font embedding), `js/views/editor.js`, `js/views/templates.js`; festival templates are added to `catalog.js` from `designs.js`.
 - tools/audit_lang.py — EN/HI leftover-text audit; js/data/fonts_all.js, js/views/fontpicker.js — font catalogue and picker; tools/vendor_fonts.py — vendors extra OFL fonts.
 - tools/audit_tools.py — sweep of every route/tool for JS errors (HI+EN).
+- .github/web-build.request — edit + push to start web.yml for the listed apps.

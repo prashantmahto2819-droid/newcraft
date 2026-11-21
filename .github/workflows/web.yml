@@ -7,6 +7,10 @@ on:
       apps:
         description: 'JSON list, any of: ["vector","photo","pdf","film"]'
         default: '["vector","photo","pdf","film"]'
+  # Also starts when .github/web-build.request changes on main: that file holds the JSON list of apps to build.
+  push:
+    branches: [main]
+    paths: [".github/web-build.request"]
 
 env:
   CARGO_PROFILE_RELEASE_LTO: "off"
@@ -32,10 +36,12 @@ jobs:
     outputs:
       matrix: ${{ steps.m.outputs.matrix }}
     steps:
+      - uses: actions/checkout@v4
       - id: m
         env:
           IN_APPS: ${{ inputs.apps }}
         run: |
+          if [ "${{ github.event_name }}" = "push" ]; then export IN_APPS="$(head -n 1 .github/web-build.request)"; fi
           python3 - <<'PY'
           import json, os
           crate = {"vector": "vectorcraft-web", "photo": "photocraft-web", "pdf": "pdfcraft-web", "film": "filmcraft-web"}

@@ -156,3 +156,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-21 (editor batch 3) — text styling, lock/hide, snap guides
 - `designs.js`: text `ls` (letter spacing), `it` (italic), `ul` (underline); `hid` layers are not rendered; `lock` layers get pointer-events none. `editor.js`: Italic/Underline buttons, letter and line spacing sliders, lock and show/hide toggles in the layer list, snapping to the page centre while dragging with pink guide lines (Alt disables). Tests: 105 PASS; snapping checked by a manual Playwright drag.
+
+## 2026-11-21 (build trigger) — web.yml can be started by a push
+- `.github/web-build.request` (line 1 = JSON list of apps). A change to it on main starts `web.yml`; used to start the first film web build.
