@@ -114,3 +114,5 @@ a.primary,a.ghost{text-decoration:none}
 @media(max-width:860px){.edwrap{grid-template-columns:1fr}.edstage{position:static;min-height:0}.edpanel{max-height:none}.tgrid2{grid-template-columns:repeat(2,1fr);gap:10px}.tcard-prev{height:170px}.tcard-act .ghost{display:none}}
 .fplist{display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow:auto;padding:2px}.fprow{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:10px;background:var(--panel2);text-align:left;border:2px solid transparent}.fprow:hover{border-color:var(--brand2)}.fprow.on{border-color:var(--brand)}
 .fpsample{font-size:1.5rem;line-height:1.35;min-height:2.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fontbtn{justify-content:flex-start;width:100%;font-size:1rem}
+
+.edtog{cursor:pointer;opacity:.7;font-size:13px}.edtog:hover{opacity:1}

@@ -154,12 +154,13 @@ function baseSvg(l) {
   if (l.t === "text") {
     const lines = String(l.text).split("\n"), lh = (l.lh || 1.2) * l.size, y0 = l.y - ((lines.length - 1) * lh) / 2;
     const anchor = l.anchor || "middle";
-    return `<text ${d} x="${l.x}" y="${y0}" font-family="${fam(l.font)}" font-size="${l.size}" font-weight="${l.weight || 700}" fill="${l.fill}" opacity="${op}" text-anchor="${anchor}" dominant-baseline="central"${l.stroke ? ` stroke="${l.stroke}" stroke-width="${l.sw || 4}" paint-order="stroke"` : ""}${tf} style="white-space:pre">${lines.map((s, i) => `<tspan x="${l.x}" dy="${i ? lh : 0}">${esc(s) || " "}</tspan>`).join("")}</text>`;
+    return `<text ${d} x="${l.x}" y="${y0}" font-family="${fam(l.font)}" font-size="${l.size}" font-weight="${l.weight || 700}" fill="${l.fill}" opacity="${op}" text-anchor="${anchor}" dominant-baseline="central"${l.ls ? ` letter-spacing="${l.ls}"` : ""}${l.it ? ` font-style="italic"` : ""}${l.ul ? ` text-decoration="underline"` : ""}${l.stroke ? ` stroke="${l.stroke}" stroke-width="${l.sw || 4}" paint-order="stroke"` : ""}${tf} style="white-space:pre">${lines.map((s, i) => `<tspan x="${l.x}" dy="${i ? lh : 0}">${esc(s) || " "}</tspan>`).join("")}</text>`;
   }
   return "";
 }
 // gradient fill (l.g2 second colour, l.ga angle) and drop shadow (l.sh = {c,b,x,y}) are layered on top of the plain shapes
 export function layerSvg(l) {
+  if (l.hid) return "";
   let defs = "", L2 = l;
   if (l.g2 && l.fill && l.fill !== "none" && l.t !== "ring" && !l.img) {
     defs += `<linearGradient id="g-${l.id}" gradientTransform="rotate(${l.ga ?? 90} .5 .5)"><stop offset="0" stop-color="${l.fill}"/><stop offset="1" stop-color="${l.g2}"/></linearGradient>`;
@@ -170,6 +171,7 @@ export function layerSvg(l) {
     defs += `<filter id="s-${l.id}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="${l.sh.x ?? 6}" dy="${l.sh.y ?? 8}" stdDeviation="${(l.sh.b ?? 12) / 2}" flood-color="${l.sh.c || "#000000"}" flood-opacity="${l.sh.o ?? 0.5}"/></filter>`;
     out = `<g filter="url(#s-${l.id})">${out}</g>`;
   }
+  if (l.lock) out = `<g pointer-events="none">${out}</g>`;
   return defs ? `<defs>${defs}</defs>${out}` : out;
 }
 export function designSvg(d, { fontCss = "", id: sid = "d" } = {}) {

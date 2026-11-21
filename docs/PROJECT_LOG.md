@@ -153,3 +153,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 - `web.yml`: new matrix app `film` (crate filmcraft-web) built with `cargo xtask web` + wasm-bindgen-cli 0.2.129 (no trunk), output copied to apps/film/dist/web, artifact `web-film`. Deploy job now reuses the newest older artifact of every app not built in the run and runs even if one build fails.
 - `site.yml`, `tools/assemble_site.sh`, `_routes.json`, Pages Function: `/film/` added (R2 offload applies). Dashboard `catalog.js` film `web: "film/"`; film `web/index.html` loads `../bridge.js`.
 - **Not verified:** the film wasm build has never run in our CI (LTO-off profile, runner memory, wasm size unknown). Until a `web-film` artifact exists, /film/ is a "being built" placeholder. Bridge open/save with Film untested (falls back to synthetic drop; no blank doc for new film projects).
+
+## 2026-11-21 (editor batch 3) — text styling, lock/hide, snap guides
+- `designs.js`: text `ls` (letter spacing), `it` (italic), `ul` (underline); `hid` layers are not rendered; `lock` layers get pointer-events none. `editor.js`: Italic/Underline buttons, letter and line spacing sliders, lock and show/hide toggles in the layer list, snapping to the page centre while dragging with pink guide lines (Alt disables). Tests: 105 PASS; snapping checked by a manual Playwright drag.

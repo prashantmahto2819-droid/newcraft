@@ -56,6 +56,18 @@ with sync_playwright() as p:
     n0 = pg.locator(".edcanvas svg [data-id]").count(); pg.click(".edpanel .btnrow .ghost >> nth=0"); pg.wait_for_timeout(250)
     ok(pg.locator(".edcanvas svg [data-id]").count() == n0 + 1, "editor: add text layer")
     pg.click("button[title='Ctrl+Z']"); pg.wait_for_timeout(250); ok(pg.locator(".edcanvas svg [data-id]").count() == n0, "editor: undo")
+    # text styling, lock, hide
+    pg.locator(".edcanvas svg text").first.click(); pg.wait_for_timeout(200)
+    pg.click(".edpanel button[title='Italic'], .edpanel button[title='तिरछा']"); pg.wait_for_timeout(200)
+    ok(pg.locator(".edcanvas svg text[font-style='italic']").count() == 1, "editor: italic")
+    nvis = pg.locator(".edcanvas svg [data-id]").count()
+    pg.locator(".edlayer.on .edtog").nth(1).click(); pg.wait_for_timeout(200)
+    ok(pg.locator(".edcanvas svg [data-id]").count() == nvis - 1, "editor: hide layer")
+    pg.locator(".edlayer.on .edtog").nth(1).click(); pg.wait_for_timeout(200)
+    pg.locator(".edlayer.on .edtog").nth(0).click(); pg.wait_for_timeout(200)
+    ok(pg.locator(".edcanvas svg g[pointer-events='none']").count() == 1 and pg.locator(".edcanvas svg [data-handle]").count() == 0, "editor: lock layer")
+    for _ in range(4): pg.click("button[title='Ctrl+Z']")
+    pg.wait_for_timeout(250)
     # photo layer
     import zlib as _z, struct as _s
     def _ck(t, b): return _s.pack(">I", len(b)) + t + b + _s.pack(">I", _z.crc32(t + b) & 0xffffffff)

@@ -31,6 +31,7 @@ export async function render(ctx) {
   const redo = () => { if (hi < hist.length - 1) { d = clone(hist[++hi]); persist(); draw(); panelRender(); } };
   const layer = () => d.layers.find((l) => l.id === sel);
 
+  let guides = [];
   function draw() {
     canvas.innerHTML = designSvg(d, { id: "ed" }); const svg = canvas.firstChild; svg.removeAttribute("width"); svg.removeAttribute("height"); svg.style.cssText = "width:100%;height:auto;display:block;touch-action:none;user-select:none";
     const l = layer(); const el = l && svg.querySelector(`[data-id="${l.id}"]`);
@@ -38,8 +39,9 @@ export async function render(ctx) {
       const b = el.getBBox(), pad = 8, ns = "http://www.w3.org/2000/svg";
       const r = document.createElementNS(ns, "rect"); r.setAttribute("x", b.x - pad); r.setAttribute("y", b.y - pad); r.setAttribute("width", b.width + 2 * pad); r.setAttribute("height", b.height + 2 * pad); r.setAttribute("fill", "none"); r.setAttribute("stroke", "#14b8a6"); r.setAttribute("stroke-width", "3"); r.setAttribute("stroke-dasharray", "10 7"); r.setAttribute("pointer-events", "none");
       const hd = document.createElementNS(ns, "circle"); hd.setAttribute("cx", b.x + b.width + pad); hd.setAttribute("cy", b.y + b.height + pad); hd.setAttribute("r", 14); hd.setAttribute("fill", "#14b8a6"); hd.setAttribute("stroke", "#fff"); hd.setAttribute("stroke-width", "3"); hd.dataset.handle = "1"; hd.style.cursor = "nwse-resize";
-      svg.append(r, hd);
+      svg.append(r); if (!l.lock) svg.append(hd);
     }
+    for (const [a, v] of guides) { const g = document.createElementNS("http://www.w3.org/2000/svg", "line"); g.setAttribute(a === "x" ? "x1" : "y1", v); g.setAttribute(a === "x" ? "x2" : "y2", v); g.setAttribute(a === "x" ? "y2" : "x2", a === "x" ? d.H : d.W); g.setAttribute(a === "x" ? "y1" : "x1", 0); g.setAttribute("stroke", "#f43f8e"); g.setAttribute("stroke-width", "2"); g.setAttribute("pointer-events", "none"); g.setAttribute("class", "edguide"); svg.append(g); }
     layersRender();
   }
   const pt = (ev) => { const svg = canvas.firstChild, m = svg.getScreenCTM().inverse(), p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; const q = p.matrixTransform(m); return [q.x, q.y]; };
@@ -53,11 +55,11 @@ export async function render(ctx) {
   });
   canvas.addEventListener("pointermove", (ev) => {
     if (!drag) return; const p = pt(ev), l = drag.l;
-    if (drag.mode === "move") { const dx = p[0] - drag.p0[0], dy = p[1] - drag.p0[1]; drag.moved = true; if (l.t === "poly") l.points = drag.s0.map(([x, y]) => [x + dx, y + dy]); else if (l.t === "path") { l.dx = dx; l.dy = dy; } else { l.x = Math.round(drag.s0.x + dx); l.y = Math.round(drag.s0.y + dy); } }
+    if (drag.mode === "move") { const dx = p[0] - drag.p0[0], dy = p[1] - drag.p0[1]; drag.moved = true; if (l.t === "poly") l.points = drag.s0.map(([x, y]) => [x + dx, y + dy]); else if (l.t === "path") { l.dx = dx; l.dy = dy; } else { l.x = Math.round(drag.s0.x + dx); l.y = Math.round(drag.s0.y + dy); guides = []; if (!ev.altKey) { const hw = l.t === "rect" ? l.w / 2 : 0, hh = l.t === "rect" ? l.h / 2 : 0, T = d.W * 0.012; if ((l.t !== "text" || (l.anchor || "middle") === "middle") && Math.abs(l.x + hw - d.W / 2) < T) { l.x = Math.round(d.W / 2 - hw); guides.push(["x", d.W / 2]); } if (Math.abs(l.y + hh - d.H / 2) < T) { l.y = Math.round(d.H / 2 - hh); guides.push(["y", d.H / 2]); } } } }
     else { const k = Math.max(0.1, Math.hypot(p[0] - drag.c[0], p[1] - drag.c[1]) / drag.d0), s = drag.s0; if (l.t === "text") l.size = Math.max(6, Math.round(s.size * k)); else if (l.t === "circle" || l.t === "ring") l.r = Math.max(3, Math.round(s.r * k)); else if (l.t === "rect") { l.w = Math.max(4, Math.round(s.w * k)); l.h = Math.max(4, Math.round(s.h * k)); l.x = Math.round(s.x + (s.w - l.w) / 2); l.y = Math.round(s.y + (s.h - l.h) / 2); } }
     schedule();
   });
-  const end = () => { if (!drag) return; const was = drag; drag = null; if (was.mode === "size" || was.moved) { commit(); panelRender(); } };
+  const end = () => { if (!drag) return; const was = drag; drag = null; if (guides.length) { guides = []; draw(); } if (was.mode === "size" || was.moved) { commit(); panelRender(); } };
   canvas.addEventListener("pointerup", end); canvas.addEventListener("pointercancel", end);
   canvas.addEventListener("dblclick", () => panel.querySelector("textarea")?.focus());
   function centerOf(l) { if (l.t === "rect") return [l.x + l.w / 2, l.y + l.h / 2]; return [l.x ?? 0, l.y ?? 0]; }
@@ -68,7 +70,7 @@ export async function render(ctx) {
     if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "z") { ev.preventDefault(); ev.shiftKey ? redo() : undo(); }
     else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "y") { ev.preventDefault(); redo(); }
     else if ((ev.key === "Delete" || ev.key === "Backspace") && sel) { ev.preventDefault(); del(); }
-    else if (sel && ev.key.startsWith("Arrow")) { const l = layer(), s = ev.shiftKey ? 20 : 4; if (l && l.x != null) { ev.preventDefault(); if (ev.key === "ArrowLeft") l.x -= s; if (ev.key === "ArrowRight") l.x += s; if (ev.key === "ArrowUp") l.y -= s; if (ev.key === "ArrowDown") l.y += s; commit(); draw(); } }
+    else if (sel && ev.key.startsWith("Arrow")) { const l = layer(), s = ev.shiftKey ? 20 : 4; if (l && l.x != null && !l.lock) { ev.preventDefault(); if (ev.key === "ArrowLeft") l.x -= s; if (ev.key === "ArrowRight") l.x += s; if (ev.key === "ArrowUp") l.y -= s; if (ev.key === "ArrowDown") l.y += s; commit(); draw(); } }
   };
   addEventListener("keydown", keys);
 
@@ -101,7 +103,9 @@ export async function render(ctx) {
   const name = (l) => l.img ? L("फ़ोटो", "Photo") : l.t === "text" ? String(l.text).split("\n")[0].slice(0, 22) || "…" : { rect: L("आयत", "Rectangle"), circle: L("गोला", "Circle"), ring: L("रिंग", "Ring"), poly: L("आकार", "Shape"), path: L("लहर", "Wave") }[l.t];
   function layersRender() {
     layersBox.textContent = "";
-    for (const l of [...d.layers].reverse()) layersBox.append(h("button.edlayer" + (l.id === sel ? ".on" : ""), { type: "button", onclick: () => { sel = l.id; draw(); panelRender(); } }, h("small", l.t === "text" ? "T" : l.t === "rect" ? "▭" : l.t === "circle" ? "●" : l.t === "ring" ? "◯" : "◆"), h("span", name(l))));
+    for (const l of [...d.layers].reverse()) layersBox.append(h("button.edlayer" + (l.id === sel ? ".on" : ""), { type: "button", onclick: () => { sel = l.id; draw(); panelRender(); } }, h("small", l.t === "text" ? "T" : l.t === "rect" ? "▭" : l.t === "circle" ? "●" : l.t === "ring" ? "◯" : "◆"), h("span", { style: "flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" + (l.hid ? ";opacity:.45" : "") }, name(l)),
+      h("span.edtog", { title: L("ताला", "Lock"), onclick: (e) => { e.stopPropagation(); l.lock = !l.lock; commit(); draw(); } }, l.lock ? "🔒" : "🔓"),
+      h("span.edtog", { title: L("दिखाएँ/छुपाएँ", "Show/hide"), onclick: (e) => { e.stopPropagation(); l.hid = !l.hid; commit(); draw(); } }, l.hid ? "🚫" : "👁")));
   }
   function nudge(l, dx, dy) { if (l.t === "poly") l.points = l.points.map(([x, y]) => [x + dx, y + dy]); else if (l.t === "path") { l.dx = (l.dx || 0) + dx; l.dy = (l.dy || 0) + dy; } else { l.x = Math.round(l.x + dx); l.y = Math.round(l.y + dy); } }
   function align(k) {
@@ -124,6 +128,8 @@ export async function render(ctx) {
         row(L("आकार", "Size"), range(8, Math.max(400, l.size), l.size, (v) => (l.size = v))),
         h("div.grid2", row(L("रंग", "Colour"), colour(l.fill, (v) => (l.fill = v))), row(L("किनारा", "Outline"), colour(l.stroke || "#000000", (v) => { l.stroke = v; l.sw ||= 6; }))),
         h("div.btnrow", h("button.ghost", { onclick: () => { l.weight = l.weight >= 700 ? 400 : 700; commit(); draw(); } }, "B"), h("button.ghost", { onclick: () => { l.anchor = "start"; l.x = Math.round(d.W * 0.08); commit(); draw(); } }, "⇤"), h("button.ghost", { onclick: () => { l.anchor = "middle"; l.x = Math.round(d.W / 2); commit(); draw(); } }, "↔"), h("button.ghost", { onclick: () => { l.anchor = "end"; l.x = Math.round(d.W * 0.92); commit(); draw(); } }, "⇥")),
+        h("div.btnrow", h("button.ghost", { title: L("तिरछा", "Italic"), style: "font-style:italic", onclick: () => { l.it = !l.it; commit(); draw(); } }, "I"), h("button.ghost", { title: L("रेखांकित", "Underline"), style: "text-decoration:underline", onclick: () => { l.ul = !l.ul; commit(); draw(); } }, "U")),
+        h("div.grid2", row(L("अक्षर दूरी", "Letter spacing"), range(-5, 60, l.ls || 0, (v) => (l.ls = v))), row(L("पंक्ति दूरी", "Line spacing"), range(0.8, 2.5, l.lh || 1.2, (v) => (l.lh = v), 0.05))),
         row(L("घुमाव", "Rotate"), range(-180, 180, l.rot || 0, (v) => (l.rot = v))));
       else if (l.t === "ring") f.push(row(L("रंग", "Colour"), colour(l.stroke, (v) => (l.stroke = v))), row(L("मोटाई", "Thickness"), range(1, 60, l.sw || 4, (v) => (l.sw = v))), row(L("आकार", "Size"), range(5, 900, l.r, (v) => (l.r = v))));
       else if (l.t === "rect" || l.t === "circle") f.push(row(L("रंग", "Colour"), colour(l.fill === "none" ? "#ffffff" : l.fill, (v) => (l.fill = v))), l.t === "circle" ? row(L("आकार", "Size"), range(5, 900, l.r, (v) => (l.r = v))) : h("div.grid2", row(L("चौड़ाई", "Width"), range(5, d.W * 1.2, l.w, (v) => (l.w = v))), row(L("ऊँचाई", "Height"), range(5, d.H * 1.2, l.h, (v) => (l.h = v)))), l.t === "rect" ? row(L("गोलाई", "Corners"), range(0, 200, l.rx || 0, (v) => (l.rx = v))) : null);
