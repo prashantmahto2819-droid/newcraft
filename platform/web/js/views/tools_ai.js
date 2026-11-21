@@ -2,7 +2,7 @@ import { h, icon, toast } from "../ui.js";
 import { L, field, note, sel } from "./tools_img.js";
 
 const TASKS = [["greeting", L("शुभकामना संदेश लिखिए", "Write greeting messages")], ["caption", L("सोशल मीडिया कैप्शन", "Social media captions")], ["fixocr", L("OCR टेक्स्ट की गलतियाँ ठीक कीजिए", "Fix OCR mistakes")], ["translate", L("हिंदी ↔ English अनुवाद", "Hindi ↔ English translate")]];
-const HINT = { greeting: "जैसे: दादाजी के 80वें जन्मदिन के लिए", caption: "जैसे: नई दुकान का उद्घाटन, शनिवार सुबह 10 बजे", fixocr: "OCR से निकला टेक्स्ट यहाँ चिपकाइए", translate: "जो अनुवाद करना है वह लिखिए" };
+const HINT = { get greeting() { return L("जैसे: दादाजी के 80वें जन्मदिन के लिए", "e.g. for grandfather's 80th birthday"); }, get caption() { return L("जैसे: नई दुकान का उद्घाटन, शनिवार सुबह 10 बजे", "e.g. new shop opening, Saturday 10 am"); }, get fixocr() { return L("OCR से निकला टेक्स्ट यहाँ चिपकाइए", "Paste the OCR text here"); }, get translate() { return L("जो अनुवाद करना है वह लिखिए", "Type what to translate"); } };
 export const aiError = (e) => (e?.message === "ai_needs_cloud" ? L("AI के लिए क्लाउड मोड (साइन-इन) चाहिए", "AI needs cloud mode (sign in)") : e?.message === "not_configured" ? L("AI अभी चालू नहीं है (GEMINI_API_KEY secret जोड़ना बाक़ी है)", "AI is not set up yet (GEMINI_API_KEY secret missing)") : L("AI जवाब नहीं दे सका, थोड़ी देर बाद कोशिश कीजिए", "AI could not answer, try again shortly"));
 
 export function aiTool() {

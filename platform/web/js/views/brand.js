@@ -1,6 +1,7 @@
 import { h, icon, modal, toast, confirmBox, downloadBlob } from "../ui.js";
 import { t } from "../i18n.js";
 import { FONTS } from "../data/catalog.js";
+import { pickFont } from "./fontpicker.js";
 import { guard, pickFile } from "./shared.js";
 
 // ---- colour helpers ----
@@ -30,7 +31,8 @@ export function kitModal(ctx, kit, seedColors) {
   const name = h("input", { value: k.name, placeholder: t("kit_name"), "aria-label": t("kit_name") });
   const colorBox = h("div.swatches"); const fontBox = h("div.chips");
   const drawC = () => { colorBox.textContent = ""; k.colors.forEach((c, i) => colorBox.append(h("label.cpick", { style: { background: c } }, h("input", { type: "color", value: c, oninput: (e) => { k.colors[i] = e.target.value; e.target.parentNode.style.background = e.target.value; } }), h("button.rm", { type: "button", "aria-label": "remove", onclick: (e) => { e.preventDefault(); k.colors.splice(i, 1); drawC(); } }, "×")))); if (k.colors.length < 12) colorBox.append(h("button.addc", { type: "button", "aria-label": t("add_color"), onclick: () => { k.colors.push("#888888"); drawC(); } }, icon("plus", 18))); };
-  const drawF = () => { fontBox.textContent = ""; for (const f of FONTS) fontBox.append(h("button.chip" + (k.fonts.includes(f) ? ".on" : ""), { type: "button", style: { fontFamily: `"${f}", system-ui` }, onclick: () => { k.fonts = k.fonts.includes(f) ? k.fonts.filter((x) => x !== f) : [...k.fonts, f]; drawF(); } }, f)); };
+  const drawF = () => { fontBox.textContent = ""; for (const f of [...FONTS, ...k.fonts.filter((x) => !FONTS.includes(x))]) fontBox.append(h("button.chip" + (k.fonts.includes(f) ? ".on" : ""), { type: "button", style: { fontFamily: `"${f}", system-ui` }, onclick: () => { k.fonts = k.fonts.includes(f) ? k.fonts.filter((x) => x !== f) : [...k.fonts, f]; drawF(); } }, f));
+    fontBox.append(h("button.chip", { type: "button", onclick: () => pickFont("", (f) => { if (!k.fonts.includes(f)) k.fonts = [...k.fonts, f]; drawF(); }) }, "+ " + t("fonts") + " (79)")); };
   drawC(); drawF();
   modal({ title: kit ? t("rename") + ": " + kit.name : t("new_kit"), wide: true, body: h("div.form", h("label", t("kit_name")), name, h("label", t("colors")), colorBox, h("label", t("fonts")), fontBox),
     actions: [{ label: t("cancel") }, { label: t("save"), kind: "primary", run: () => guard(async () => { await ctx.store.saveKit({ ...kit, id: k.id, name: name.value.trim() || t("untitled"), colors: k.colors, fonts: k.fonts }); toast(t("saved")); ctx.refresh(); }) }] });

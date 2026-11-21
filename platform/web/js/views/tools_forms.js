@@ -1,6 +1,6 @@
 import { h, icon, toast, downloadBlob } from "../ui.js";
 import { loadImg, jpegsToPdf, canvasJpeg } from "../tools/pdf.js";
-import { DECO_FONTS } from "../data/deco_fonts.js";
+import { loadFontCss, fontWeight, fontOptions } from "../data/fonts_all.js";
 import { pickFile } from "./shared.js";
 import { L, field, note, sel, textIn } from "./tools_img.js";
 
@@ -36,7 +36,7 @@ export function formPhotoTool() {
 
 // ---- certificate maker (A4 landscape PDF/PNG)
 const THEMES = { gold: ["#fffaf0", "#b45309", "#7c2d12"], blue: ["#f8fafc", "#1d4ed8", "#1e3a8a"], green: ["#f7fee7", "#15803d", "#14532d"], maroon: ["#fff7ed", "#9f1239", "#4c0519"] };
-let cssP; const loadDeco = () => (cssP ??= new Promise((r) => { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = new URL("../../vendor/fonts/deco/deco.css", import.meta.url).href; l.onload = l.onerror = r; document.head.append(l); }));
+const loadDeco = loadFontCss;
 function wrapLines(x, text, maxW) { const out = []; for (const para of String(text).split("\n")) { let line = ""; for (const w of para.split(/\s+/)) { const t = line ? line + " " + w : w; if (x.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; } out.push(line); } return out; }
 export function drawCertificate(cv, d, logo) {
   const W = 3508, H = 2480, [bg, c1, c2] = THEMES[d.theme]; cv.width = W; cv.height = H; const x = cv.getContext("2d"); x.fillStyle = bg; x.fillRect(0, 0, W, H);
@@ -61,7 +61,7 @@ export function certificateTool() {
   const full = async () => { await draw(); const c = document.createElement("canvas"); drawCertificate(c, d, logo); return c; };
   return h("div.form", note(L("सम्मान / भागीदारी / उपलब्धि प्रमाण पत्र बनाइए: सजावटी हिंदी फ़ॉन्ट और रंगीन बॉर्डर के साथ, A4 आड़ा (landscape) PDF या PNG।", "Make appreciation / participation / achievement certificates with decorative Hindi fonts and borders, A4 landscape PDF or PNG.")),
     h("div.grid2", t("title", L("शीर्षक", "Title")), t("name", L("नाम", "Name")), t("lead", L("शुरुआती पंक्ति", "Lead line")), t("org", L("संस्था का नाम", "Organisation")), t("date", L("दिनांक", "Date")),
-      field(L("रंग-थीम", "Theme"), sel([["gold", L("सुनहरा", "Gold")], ["blue", L("नीला", "Blue")], ["green", L("हरा", "Green")], ["maroon", L("मैरून", "Maroon")]], d.theme, (v) => { d.theme = v; draw(); })), field(L("शीर्षक का फ़ॉन्ट", "Title font"), sel(DECO_FONTS.map((f) => [f.family, `${f.family} — ${f.kind}`]), d.font, (v) => { d.font = v; draw(); })),
+      field(L("रंग-थीम", "Theme"), sel([["gold", L("सुनहरा", "Gold")], ["blue", L("नीला", "Blue")], ["green", L("हरा", "Green")], ["maroon", L("मैरून", "Maroon")]], d.theme, (v) => { d.theme = v; draw(); })), field(L("शीर्षक का फ़ॉन्ट", "Title font"), sel(fontOptions(), d.font, (v) => { d.font = v; draw(); })),
       t("s1", L("हस्ताक्षर 1 का नाम", "Signer 1")), t("r1", L("पद 1", "Role 1")), t("s2", L("हस्ताक्षर 2 का नाम", "Signer 2")), t("r2", L("पद 2", "Role 2"))), t("body", L("मुख्य पंक्तियाँ", "Body text"), true),
     h("div.btnrow", h("button.ghost", { onclick: () => pickFile("image/*", async (f) => { logo = await loadImg(f); draw(); }) }, icon("image", 16), L("लोगो", "Logo")),
       h("button.primary", { onclick: async () => { const c = await full(); downloadBlob("certificate.pdf", new Blob([jpegsToPdf([{ jpeg: await canvasJpeg(c, 0.93), w: c.width, h: c.height, pw: 841.89, ph: 595.28, x: 0, y: 0, iw: 841.89, ih: 595.28 }])], { type: "application/pdf" })); } }, icon("download", 16), "PDF"),

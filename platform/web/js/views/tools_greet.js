@@ -1,13 +1,16 @@
 import { h, icon, toast, downloadBlob } from "../ui.js";
 import { loadImg } from "../tools/pdf.js";
-import { DECO_FONTS } from "../data/deco_fonts.js";
+import { loadFontCss, fontWeight, fontOptions } from "../data/fonts_all.js";
 import { pickFile } from "./shared.js";
 import { L, field, note, sel, textIn } from "./tools_img.js";
 
 const SIZES = { sq: [1080, 1080], pt: [1080, 1350], st: [1080, 1920] };
 const PRESETS = ["जन्मदिन की हार्दिक शुभकामनाएँ", "सुप्रभात", "शुभ रात्रि", "दीपावली की हार्दिक शुभकामनाएँ", "होली की हार्दिक शुभकामनाएँ", "नववर्ष की हार्दिक शुभकामनाएँ", "विवाह की वर्षगांठ की बधाई", "रक्षाबंधन की शुभकामनाएँ", "ईद मुबारक", "गुरु पूर्णिमा की शुभकामनाएँ", "बधाई हो!", "भावभीनी श्रद्धांजलि"];
+const PRESETS_EN = ["Happy Birthday!", "Good Morning", "Good Night", "Happy Diwali", "Happy Holi", "Happy New Year", "Happy Anniversary", "Happy Raksha Bandhan", "Eid Mubarak", "Merry Christmas", "Congratulations!", "Thank You"];
+const presets = () => (document.documentElement.lang === "en" ? PRESETS_EN : PRESETS);
+const BGN_EN = { sun: "Sunrise", marigold: "Marigold", royal: "Royal blue", peacock: "Peacock green", rose: "Rose", night: "Night", saffron: "Saffron", white: "Plain white" };
 const BGS = { sun: ["सूर्योदय", "#ff8a3c", "#ffd86b", "#7c2d12", "rays"], marigold: ["गेंदा", "#f59e0b", "#fde68a", "#78350f", "dots"], royal: ["राजसी नीला", "#1e1b4b", "#3730a3", "#fde68a", "mandala"], peacock: ["मोर हरा", "#064e3b", "#0891b2", "#fef08a", "mandala"], rose: ["गुलाबी", "#be185d", "#f9a8d4", "#fff1f2", "petals"], night: ["रात", "#0f172a", "#1e3a8a", "#fde68a", "stars"], saffron: ["केसरिया", "#ea580c", "#fb923c", "#fff7ed", "mandala"], plain: ["सादा सफ़ेद", "#ffffff", "#f1f5f9", "#0f172a", "none"] };
-let cssP; const loadDeco = () => (cssP ??= new Promise((r) => { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = new URL("../../vendor/fonts/deco/deco.css", import.meta.url).href; l.onload = l.onerror = r; document.head.append(l); }));
+const loadDeco = loadFontCss;
 const rnd = (seed) => () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
 
 function pattern(x, W, H, kind, ink) {
@@ -39,22 +42,22 @@ export function drawGreeting(cv, d, photo) {
   const ink = d.ink || bg[3]; let cy = H * 0.17;
   if (photo) { const r = W * 0.17, py = H * 0.25; x.save(); x.beginPath(); x.arc(W / 2, py, r, 0, 7); x.clip(); const s = Math.max((2 * r) / photo.width, (2 * r) / photo.height); x.drawImage(photo, W / 2 - (photo.width * s) / 2, py - (photo.height * s) / 2, photo.width * s, photo.height * s); x.restore(); x.lineWidth = 10; x.strokeStyle = ink; x.beginPath(); x.arc(W / 2, py, r + 8, 0, 7); x.stroke(); cy = py + r + H * 0.06; } else cy = H * 0.22;
   const mid = photo ? (cy + H * 0.8) / 2 + H * 0.02 : H * 0.46;
-  const end = block(x, d, d.title, d.font, DECO_FONTS.find((f) => f.family === d.font)?.weight || 700, W * 0.115, photo ? mid - H * 0.05 : mid, W, d.color, 4, W * 0.8);
+  const end = block(x, d, d.title, d.font, fontWeight(d.font), W * 0.115, photo ? mid - H * 0.05 : mid, W, d.color, 4, W * 0.8);
   block(x, d, d.sub, d.font2, 400, W * 0.052, Math.max(end + H * 0.06, mid + H * 0.14), W, d.color, 3, W * 0.78);
-  block(x, d, d.name, d.font, DECO_FONTS.find((f) => f.family === d.font)?.weight || 700, W * 0.06, H * 0.88, W, ink, 1, W * 0.8);
+  block(x, d, d.name, d.font, fontWeight(d.font), W * 0.06, H * 0.88, W, ink, 1, W * 0.8);
 }
 export function greetingTool() {
-  const d = { size: "sq", bg: "sun", title: PRESETS[0], sub: "आपका जीवन खुशियों से भरा रहे", name: "— आपका नाम", font: "Yatra One", font2: "Kalam", color: "#ffffff", ink: "", outline: true, outlineColor: "#7c2d12", shadow: true, frame: "ornate" }; let photo = null;
+  const d = { size: "sq", bg: "sun", title: presets()[0], sub: L("आपका जीवन खुशियों से भरा रहे", "May your life be full of joy"), name: L("— आपका नाम", "— Your name"), font: "Yatra One", font2: "Kalam", color: "#ffffff", ink: "", outline: true, outlineColor: "#7c2d12", shadow: true, frame: "ornate" }; let photo = null;
   const out = h("div.canvasbox"), cv = document.createElement("canvas"); cv.className = "prev"; out.append(cv);
   const draw = async () => { await loadDeco(); try { await Promise.all([d.font, d.font2].map((f) => document.fonts.load(`700 40px "${f}"`))); await document.fonts.load('400 30px "Kalam"'); } catch {} drawGreeting(cv, d, photo); };
-  const fontOpts = DECO_FONTS.map((f) => [f.family, `${f.family} — ${f.kind}`]), t = (k, label, o = {}) => field(label, textIn(d[k], (v) => { d[k] = v; draw(); }, o));
+  const fontOpts = fontOptions(), t = (k, label, o = {}) => field(label, textIn(d[k], (v) => { d[k] = v; draw(); }, o));
   const colorIn = (k) => h("input", { type: "color", value: d[k] || "#ffffff", oninput: (e) => { d[k] = e.target.value; draw(); } });
   const sample = h("div", { style: { fontSize: "13px", opacity: 0.7 } }, L("फ़ॉन्ट बदलने पर नीचे तुरंत दिखेगा", "Preview updates instantly"));
   draw();
   return h("div.form", note(L("शुभकामना, बधाई, सुप्रभात और पोस्टर के लिए सजावटी हिंदी पोस्टर बनाइए। सारे फ़ॉन्ट और डिज़ाइन मुफ़्त/ओपन लाइसेंस वाले हैं, WhatsApp/Instagram के लिए सीधे डाउनलोड कीजिए।", "Make decorative Hindi greeting posters. All fonts are free open-licence; download for WhatsApp/Instagram.")),
-    h("div.grid2", field(L("संदेश चुनिए", "Preset"), sel(PRESETS.map((p) => [p, p]), PRESETS[0], (v) => { d.title = v; draw(); })), t("title", L("मुख्य संदेश", "Main text")), t("sub", L("छोटी पंक्ति", "Sub line")), t("name", L("नाम / हस्ताक्षर", "Name")),
+    h("div.grid2", field(L("संदेश चुनिए", "Preset"), sel(presets().map((p) => [p, p]), presets()[0], (v) => { d.title = v; draw(); })), t("title", L("मुख्य संदेश", "Main text")), t("sub", L("छोटी पंक्ति", "Sub line")), t("name", L("नाम / हस्ताक्षर", "Name")),
       field(L("साइज़", "Size"), sel([["sq", "1080×1080 (Insta/WhatsApp)"], ["pt", "1080×1350 (Insta post)"], ["st", "1080×1920 (Status/Story)"]], d.size, (v) => { d.size = v; draw(); })),
-      field(L("बैकग्राउंड", "Background"), sel(Object.entries(BGS).map(([k, v]) => [k, v[0]]), d.bg, (v) => { d.bg = v; d.ink = ""; draw(); })),
+      field(L("बैकग्राउंड", "Background"), sel(Object.entries(BGS).map(([k, v]) => [k, L(v[0], BGN_EN[k] || k)]), d.bg, (v) => { d.bg = v; d.ink = ""; draw(); })),
       field(L("मुख्य फ़ॉन्ट", "Main font"), sel(fontOpts, d.font, (v) => { d.font = v; draw(); })), field(L("छोटी पंक्ति का फ़ॉन्ट", "Sub font"), sel(fontOpts, d.font2, (v) => { d.font2 = v; draw(); })),
       field(L("टेक्स्ट रंग", "Text colour"), colorIn("color")), field(L("बॉर्डर/नाम रंग", "Border colour"), colorIn("ink")),
       field(L("फ़्रेम", "Frame"), sel([["ornate", L("सजावटी", "Ornate")], ["double", L("दोहरा", "Double")], ["single", L("सादा", "Single")], ["none", L("नहीं", "None")]], d.frame, (v) => { d.frame = v; draw(); })),

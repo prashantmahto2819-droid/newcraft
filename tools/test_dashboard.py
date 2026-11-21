@@ -64,6 +64,14 @@ with sync_playwright() as p:
     pg.goto(U + "#/projects"); pg.wait_for_timeout(300); ok(pg.locator(".pcard").count() >= 2, "editor: design kept as a project")
     pg.screenshot(path=f"{OUT}/gallery.png")
     pg.goto(U + "#/editor?tpl=wedding"); pg.wait_for_selector(".edcanvas svg"); pg.wait_for_timeout(500); pg.screenshot(path=f"{OUT}/editor_wedding.png")
+    # ---- font picker
+    pg.goto(U + "#/editor?tpl=ig-post"); pg.wait_for_selector(".edcanvas svg"); pg.locator(".edcanvas svg text").first.click(); pg.wait_for_timeout(200)
+    pg.click(".edpanel .fontbtn"); pg.wait_for_selector(".fprow"); ok(pg.locator(".fprow").count() >= 70, "font picker lists 70+ fonts")
+    pg.fill(".modal input[type=search]", "poppins"); pg.wait_for_timeout(300); ok(pg.locator(".fprow").count() == 1, "font picker search")
+    pg.click(".fprow"); pg.wait_for_timeout(400); ok("Poppins" in pg.inner_text(".edpanel .fontbtn"), "font picker applies the font")
+    pg.wait_for_timeout(600); ok(pg.evaluate("document.fonts.check('700 20px Poppins')"), "chosen font file loaded from our own origin")
+    with pg.expect_download(timeout=20000) as dl: pg.click(".page-head .btnrow button:has-text('SVG')")
+    ok(b"Poppins" in open(dl.value.path(), "rb").read(), "SVG export embeds the chosen font")
     # ---- tools section
     import numpy as np, cv2, tempfile
     from PIL import Image, ImageDraw

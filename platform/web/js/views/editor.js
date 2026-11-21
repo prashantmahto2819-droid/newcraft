@@ -7,6 +7,7 @@ import { TEMPLATES } from "../data/catalog.js";
 import { buildDesign, designSvg, embedFontCss, loadDeco, FONT_LIST } from "../data/designs.js";
 import { jpegsToPdf, canvasJpeg } from "../tools/pdf.js";
 import { tplName, guard } from "./shared.js";
+import { fontButton } from "./fontpicker.js";
 
 const L = (hi, en) => (getLang() === "hi" ? hi : en);
 const KEY = (id) => "tulika-design-" + id;
@@ -102,7 +103,7 @@ export async function render(ctx) {
       const f = [];
       if (l.t === "text") f.push(
         row(L("लिखावट", "Text"), h("textarea", { rows: 3, value: l.text, oninput: (e) => { l.text = e.target.value; schedule(); }, onchange: commit })),
-        row(L("फ़ॉन्ट", "Font"), h("select", { onchange: (e) => { l.font = e.target.value; commit(); draw(); } }, FONT_LIST.map((x) => h("option", { value: x, selected: x === l.font }, x)))),
+        row(L("फ़ॉन्ट (" + FONT_LIST.length + ")", "Font (" + FONT_LIST.length + ")"), fontButton(l.font, (f) => { l.font = f; commit(); draw(); })),
         row(L("आकार", "Size"), range(8, Math.max(400, l.size), l.size, (v) => (l.size = v))),
         h("div.grid2", row(L("रंग", "Colour"), colour(l.fill, (v) => (l.fill = v))), row(L("किनारा", "Outline"), colour(l.stroke || "#000000", (v) => { l.stroke = v; l.sw ||= 6; }))),
         h("div.btnrow", h("button.ghost", { onclick: () => { l.weight = l.weight >= 700 ? 400 : 700; commit(); draw(); } }, "B"), h("button.ghost", { onclick: () => { l.anchor = "start"; l.x = Math.round(d.W * 0.08); commit(); draw(); } }, "⇤"), h("button.ghost", { onclick: () => { l.anchor = "middle"; l.x = Math.round(d.W / 2); commit(); draw(); } }, "↔"), h("button.ghost", { onclick: () => { l.anchor = "end"; l.x = Math.round(d.W * 0.92); commit(); draw(); } }, "⇥")),

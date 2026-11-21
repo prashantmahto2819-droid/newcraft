@@ -2,6 +2,7 @@
 // 1000-unit-long-side canvas. The same renderer draws the gallery previews, the editor canvas and the exports.
 // Layer types: text, rect, circle, ring, poly, path. Fonts: the 22 vendored OFL Devanagari display fonts + Noto.
 import { getLang } from "../i18n.js";
+import { FAMILIES, loadFontCss } from "./fonts_all.js";
 
 export const CATS = {
   social:   { hi: "सोशल मीडिया", en: "Social media", c: "#e1306c", e: "📱" },
@@ -60,7 +61,7 @@ export const FESTIVAL_TEMPLATES = [
   ["goodmorning", "सुप्रभात (WhatsApp)", "Good morning (WhatsApp)", 1080, 1080], ["thanks", "धन्यवाद", "Thank you", 1080, 1080],
 ];
 
-export const FONT_LIST = ["Noto Sans Devanagari", "Yatra One", "Rozha One", "Kalam", "Amita", "Modak", "Khand", "Teko", "Tillana", "Sahitya", "Laila", "Gotu", "Dekko", "Arya", "Sumana", "Karma", "Eczar", "Halant", "Kurale", "Sura", "Ranga", "Amiko", "Glegoo"];
+export const FONT_LIST = FAMILIES;
 
 let seq = 0; const id = () => "l" + ++seq;
 export const hasDesign = (tplId) => !!S[tplId];
@@ -161,18 +162,17 @@ export function designSvg(d, { fontCss = "", id: sid = "d" } = {}) {
 }
 
 // fonts for the preview/editor page and for embedding into exported files
-let cssP;
-export const loadDeco = () => (cssP ??= new Promise((r) => { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = new URL("../../vendor/fonts/deco/deco.css", import.meta.url).href; l.onload = l.onerror = r; document.head.append(l); }));
+export const loadDeco = loadFontCss;
 const b64 = (buf) => { let s = ""; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
 export async function embedFontCss(d) {
   const fams = [...new Set(d.layers.filter((l) => l.t === "text").map((l) => l.font).concat("Noto Sans Devanagari"))];
-  const decoUrl = new URL("../../vendor/fonts/deco/deco.css", import.meta.url);
-  const deco = await (await fetch(decoUrl)).text(); let css = "";
+  const sheets = await Promise.all(["../../vendor/fonts/deco/deco.css", "../../vendor/fonts/more/more.css"].map(async (rel) => { const u = new URL(rel, import.meta.url); return { u, css: await (await fetch(u)).text() }; }));
+  let css = "";
   for (const f of fams) {
-    let file, weight = "400";
-    if (f === "Noto Sans Devanagari") { file = new URL("../../vendor/fonts/NotoSansDevanagari-VF.ttf", import.meta.url); weight = "100 900"; }
-    else { const m = new RegExp(`font-family:"${f}";src:url\\("([^"]+)"\\)[^}]*font-weight:([^;}]+)`).exec(deco); if (!m) continue; file = new URL(m[1], decoUrl); weight = m[2]; }
-    try { const buf = await (await fetch(file)).arrayBuffer(); css += `@font-face{font-family:'${f}';src:url(data:font/ttf;base64,${b64(buf)}) format('truetype');font-weight:${weight}}`; } catch (_) { /* font missing: falls back */ }
+    const faces = [];
+    if (f === "Noto Sans Devanagari") faces.push([new URL("../../vendor/fonts/NotoSansDevanagari-VF.ttf", import.meta.url), "100 900"]);
+    else for (const { u, css: c } of sheets) for (const m of c.matchAll(new RegExp(`font-family:"${f}";src:url\\("([^"]+)"\\)[^}]*?font-weight:([^;}]+)`, "g"))) faces.push([new URL(m[1], u), m[2]]);
+    for (const [file, weight] of faces) { try { const buf = await (await fetch(file)).arrayBuffer(); css += `@font-face{font-family:'${f}';src:url(data:font/ttf;base64,${b64(buf)}) format('truetype');font-weight:${weight}}`; } catch (_) { /* missing: fallback */ } }
   }
   return css;
 }

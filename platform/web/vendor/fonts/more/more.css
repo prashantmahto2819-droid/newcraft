@@ -1,0 +1,78 @@
+@font-face{font-family:"Mukta";src:url("mukta-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Mukta";src:url("mukta-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Hind";src:url("hind-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Hind";src:url("hind-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Poppins";src:url("poppins-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Poppins";src:url("poppins-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Baloo 2";src:url("baloo2-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Baloo Bhai 2";src:url("baloobhai2-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Noto Serif Devanagari";src:url("notoserifdevanagari-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Martel";src:url("martel-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Martel";src:url("martel-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Yantramanav";src:url("yantramanav-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Yantramanav";src:url("yantramanav-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Kadwa";src:url("kadwa-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Kadwa";src:url("kadwa-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Sarpanch";src:url("sarpanch-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Sarpanch";src:url("sarpanch-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Palanquin";src:url("palanquin-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Palanquin";src:url("palanquin-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Rajdhani";src:url("rajdhani-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Rajdhani";src:url("rajdhani-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Biryani";src:url("biryani-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Biryani";src:url("biryani-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Cambay";src:url("cambay-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Cambay";src:url("cambay-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Sarala";src:url("sarala-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Sarala";src:url("sarala-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Asar";src:url("asar-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Inknut Antiqua";src:url("inknutantiqua-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Inknut Antiqua";src:url("inknutantiqua-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Jaldi";src:url("jaldi-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Jaldi";src:url("jaldi-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Khula";src:url("khula-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Khula";src:url("khula-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Vesper Libre";src:url("vesperlibre-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Vesper Libre";src:url("vesperlibre-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Rhodium Libre";src:url("rhodiumlibre-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Pragati Narrow";src:url("pragatinarrow-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Pragati Narrow";src:url("pragatinarrow-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Hind Vadodara";src:url("hindvadodara-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Hind Vadodara";src:url("hindvadodara-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Hind Siliguri";src:url("hindsiliguri-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Hind Siliguri";src:url("hindsiliguri-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Hind Madurai";src:url("hindmadurai-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Hind Madurai";src:url("hindmadurai-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Hind Guntur";src:url("hindguntur-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Hind Guntur";src:url("hindguntur-700.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Bebas Neue";src:url("bebasneue-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Pacifico";src:url("pacifico-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Lobster";src:url("lobster-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Playfair Display";src:url("playfairdisplay-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Montserrat";src:url("montserrat-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Oswald";src:url("oswald-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Anton";src:url("anton-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Dancing Script";src:url("dancingscript-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Caveat";src:url("caveat-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Bangers";src:url("bangers-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Abril Fatface";src:url("abrilfatface-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Cinzel";src:url("cinzel-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Righteous";src:url("righteous-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Great Vibes";src:url("greatvibes-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Lora";src:url("lora-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Raleway";src:url("raleway-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Roboto";src:url("roboto-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Open Sans";src:url("opensans-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Nunito";src:url("nunito-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Comfortaa";src:url("comfortaa-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Fredoka";src:url("fredoka-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Lilita One";src:url("lilitaone-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Staatliches";src:url("staatliches-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Alfa Slab One";src:url("alfaslabone-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Archivo Black";src:url("archivoblack-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Josefin Sans";src:url("josefinsans-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Quicksand";src:url("quicksand-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Space Grotesk";src:url("spacegrotesk-vf.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Bungee";src:url("bungee-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Sigmar One";src:url("sigmarone-400.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Press Start 2P";src:url("pressstart2p-400.ttf") format("truetype");font-weight:400;font-display:swap}
