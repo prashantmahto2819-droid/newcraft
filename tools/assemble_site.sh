@@ -18,7 +18,7 @@ stub() {
 <title>Tulika $1</title>
 <body style="font-family:system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 1rem;line-height:1.6">
 <h2>Tulika $1 — जल्द आ रहा है</h2>
-<p>इस ऐप की वेब फ़ाइल अभी Cloudflare Pages की 25 MiB सीमा से बड़ी है, इसलिए यहाँ अभी चालू नहीं है।</p>
+<p>इस ऐप का वेब संस्करण अभी बन रहा है। थोड़ी देर बाद फिर देखिए।</p>
 <p><a href="../">← डैशबोर्ड पर वापस</a></p>
 </body></html>
 HTML
@@ -29,7 +29,7 @@ HTML
 # from R2 at the same URL, so the apps need no URL rewriting.
 rm -rf r2out && mkdir -p r2out
 : > r2out/.keys
-for a in vector photo pdf; do
+for a in vector photo pdf film; do
   src="$art/web-$a"
   if [ ! -d "$src" ]; then echo "::notice::$a: no build in this run, placeholder page used"; stub "$a"; continue; fi
   mkdir -p "site/$a"
@@ -48,7 +48,7 @@ python3 - <<'PY2'
 import json
 keys = [k for k in open("r2out/.keys").read().split("\n") if k]
 json.dump(keys, open("site/r2-manifest.json", "w"))
-json.dump({"version": 1, "include": ["/vector/*", "/photo/*", "/pdf/*"], "exclude": []}, open("site/_routes.json", "w"))
+json.dump({"version": 1, "include": ["/vector/*", "/photo/*", "/pdf/*", "/film/*"], "exclude": []}, open("site/_routes.json", "w"))
 PY2
 
 printf 'window.TULIKA_CONFIG = { supabaseUrl: %s, supabaseAnonKey: %s };\n' \

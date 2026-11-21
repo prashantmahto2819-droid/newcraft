@@ -1,11 +1,12 @@
 name: Web build and deploy (Cloudflare Pages)
-# Starts only by hand (Actions tab -> Run workflow) because the three wasm builds take ~25 min each.
+# Starts only by hand (Actions tab -> Run workflow) because the wasm builds take ~25 min each.
+# Apps not built in a run keep their last build: the deploy job fetches the newest older artifact for them.
 on:
   workflow_dispatch:
     inputs:
       apps:
-        description: 'JSON list: ["vector","photo","pdf"]'
-        default: '["vector","photo","pdf"]'
+        description: 'JSON list, any of: ["vector","photo","pdf","film"]'
+        default: '["vector","photo","pdf","film"]'
 
 env:
   CARGO_PROFILE_RELEASE_LTO: "off"
@@ -13,6 +14,10 @@ env:
   CARGO_PROFILE_RELEASE_DEBUG: "0"
   CARGO_BUILD_JOBS: "2"
   TRUNK_VERSION: "0.21.14"
+
+permissions:
+  contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,7 +38,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json, os
-          crate = {"vector": "vectorcraft-web", "photo": "photocraft-web", "pdf": "pdfcraft-web"}
+          crate = {"vector": "vectorcraft-web", "photo": "photocraft-web", "pdf": "pdfcraft-web", "film": "filmcraft-web"}
           apps = json.loads(os.environ["IN_APPS"] or json.dumps(list(crate)))
           inc = [{"app": a, "crate": crate[a]} for a in apps]
           open(os.environ["GITHUB_OUTPUT"], "a").write("matrix=" + json.dumps({"include": inc}) + "\n")
@@ -69,12 +74,22 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with: { workspaces: "apps/${{ matrix.app }}" }
       - name: Install trunk
+        if: matrix.app != 'film'
         run: |
           curl --proto '=https' -fsSL "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" | tar -xz
           sudo mv trunk /usr/local/bin/
       - name: trunk build
+        if: matrix.app != 'film'
         working-directory: apps/${{ matrix.app }}/apps/${{ matrix.crate }}
         run: trunk build --release
+      # Film has no Trunk.toml: upstream builds it with `cargo xtask web` (wasm-bindgen CLI 0.2.129, see apps/film/docs/web.md).
+      - name: Film web build (cargo xtask web)
+        if: matrix.app == 'film'
+        working-directory: apps/film
+        run: |
+          cargo install wasm-bindgen-cli --version 0.2.129 --locked
+          cargo xtask web
+          mkdir -p dist && rm -rf dist/web && cp -r target/web/dist dist/web
       - name: Check relative URLs
         run: "! grep -Eq '(src|href)=\"/[^/]' apps/${{ matrix.app }}/dist/web/index.html"
       - uses: actions/upload-artifact@v4
@@ -85,12 +100,23 @@ jobs:
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
+    # runs even when one app failed to build, so the others still go live
+    if: always() && github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { path: artifacts }
+      - name: Keep the last build of apps not built in this run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for a in vector photo pdf film; do
+            [ -d "artifacts/web-$a" ] && continue
+            url="$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-$a&per_page=10" --jq '[.artifacts[] | select(.expired==false)][0].archive_download_url // empty')"
+            if [ -z "$url" ]; then echo "::warning::no earlier build of $a"; continue; fi
+            curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -o "$a.zip" "$url" && mkdir -p "artifacts/web-$a" && unzip -q "$a.zip" -d "artifacts/web-$a" && echo "$a: reused"
+          done
       - name: Assemble site
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

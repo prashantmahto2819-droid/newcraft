@@ -148,3 +148,8 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-21 (photo layer) — Editor: add your own photo
 - `editor.js` addPhoto(): picks an image, downsizes to 1400 px, stores it as a `rect` layer with `img` (data URL); `designs.js` renders it as a clipped `<image>` (rounded corners via `rx`), so move/resize/shadow/opacity/export all work. Unreadable files show a message. Tests: 102 PASS, 0 FAIL.
+
+## 2026-11-21 (film web) — Tulika Film wired into the web build and site
+- `web.yml`: new matrix app `film` (crate filmcraft-web) built with `cargo xtask web` + wasm-bindgen-cli 0.2.129 (no trunk), output copied to apps/film/dist/web, artifact `web-film`. Deploy job now reuses the newest older artifact of every app not built in the run and runs even if one build fails.
+- `site.yml`, `tools/assemble_site.sh`, `_routes.json`, Pages Function: `/film/` added (R2 offload applies). Dashboard `catalog.js` film `web: "film/"`; film `web/index.html` loads `../bridge.js`.
+- **Not verified:** the film wasm build has never run in our CI (LTO-off profile, runner memory, wasm size unknown). Until a `web-film` artifact exists, /film/ is a "being built" placeholder. Bridge open/save with Film untested (falls back to synthetic drop; no blank doc for new film projects).

@@ -9,7 +9,7 @@ if those repos disappear, builds break; consider vendoring/mirroring them.
 | apps/vector | VectorCraft | `vectorcraft` (apps/vectorcraft) | `vectorcraft-web` | `.vectorcraft` (JSON) | ~1.5M |
 | apps/photo  | PhotoCraft  | `photocraft` | `photocraft-web` (+ `photocraft-web-boot`) | `.pcraft` bundle | ~0.9M |
 | apps/pdf    | PdfCraft    | `pdfcraft` | `pdfcraft-web` (+ `pdfcraft-ocr-worker`) | PDF | ~0.7M |
-| apps/film   | FilmCraft   | `filmcraft` | `filmcraft-web` (no Trunk.toml yet) | `.fcproj` | ~0.5M |
+| apps/film   | FilmCraft   | `filmcraft` | `filmcraft-web` (built by `cargo xtask web`, not trunk; web.yml film job) | `.fcproj` | ~0.5M |
 
 ## Common layering (same pattern in all four)
 `doc/format/geom/...` (pure data) -> `engine` (sessions, history, selection, **command registry**) -> `ui-egui`

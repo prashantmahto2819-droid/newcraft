@@ -43,7 +43,7 @@ jobs:
           # Keeps the already deployed apps on every dashboard-only deploy: takes the newest unexpired
           # web-vector / web-photo / web-pdf artifact of any run. None found -> that app is a placeholder page.
           mkdir -p artifacts
-          for a in vector photo pdf; do
+          for a in vector photo pdf film; do
             url="$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-$a&per_page=10" --jq '[.artifacts[] | select(.expired==false)][0].archive_download_url // empty')"
             if [ -z "$url" ]; then echo "::warning::no unexpired artifact for $a"; continue; fi
             curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -o "$a.zip" "$url" && mkdir -p "artifacts/web-$a" && unzip -q "$a.zip" -d "artifacts/web-$a" && echo "$a: $(du -sh artifacts/web-$a | cut -f1)"

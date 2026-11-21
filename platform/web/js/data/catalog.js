@@ -4,7 +4,7 @@ export const APPS = {
   vector: { color: "#14b8a6", color2: "#0f766e", web: "vector/", exts: ["svg", "vectorcraft", "eps", "ai", "cdr", "dxf"], descKey: "app_vector", name: "Tulika Vector" },
   photo:  { color: "#f43f8e", color2: "#9d174d", web: "photo/",  exts: ["psd", "psb", "pcraft", "png", "jpg", "jpeg", "webp", "tif", "tiff", "bmp"], descKey: "app_photo", name: "Tulika Photo" },
   pdf:    { color: "#f59e0b", color2: "#b45309", web: "pdf/",    exts: ["pdf"], descKey: "app_pdf", name: "Tulika PDF" },
-  film:   { color: "#8b5cf6", color2: "#4c1d95", web: null,      exts: ["mp4", "mov", "mkv", "webm", "fcproj"], descKey: "app_film", name: "Tulika Film" },
+  film:   { color: "#8b5cf6", color2: "#4c1d95", web: "film/",    exts: ["mp4", "mov", "mkv", "webm", "fcproj"], descKey: "app_film", name: "Tulika Film" },
 };
 export const appForFile = (name) => { const e = (name.split(".").pop() || "").toLowerCase(); return Object.keys(APPS).find((k) => APPS[k].exts.includes(e)); };
 

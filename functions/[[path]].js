@@ -1,4 +1,4 @@
-// Cloudflare Pages Function. Runs only for /vector/*, /photo/*, /pdf/* (site/_routes.json).
+// Cloudflare Pages Function. Runs only for /vector/*, /photo/*, /pdf/*, /film/* (site/_routes.json).
 // Pages rejects files over 25 MiB, so tools/assemble_site.sh leaves those out of the upload and
 // tools/upload_big.sh puts them in the R2 bucket bound as BIG (wrangler.toml). This serves them
 // from R2 at the same URL; every other file comes from the normal static assets.
