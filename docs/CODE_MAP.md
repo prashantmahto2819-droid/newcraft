@@ -75,3 +75,4 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 * More tools: `js/views/tools_more.js` (`paletteOf`, `makeIco`, convert, collage, `drawResume`).
 * Hindi typing: `js/tools/translit.js` (+ `typingTool` at the end of `js/views/tools.js`).
 * Forms: `js/views/tools_forms.js` (`fitToKB`, `formPhotoTool`, `drawCertificate`, `certificateTool`).
+* CI site assembly: `tools/assemble_site.sh` (skips apps with a file over 25 MiB), used by `.github/workflows/web.yml` and `.github/workflows/site.yml` (dashboard-only deploy, no wasm).

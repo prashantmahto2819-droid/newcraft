@@ -117,3 +117,9 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-20 (night 9) — Form photo + certificate (32 tools)
 * `js/views/tools_forms.js`. Tests all pass. CI dispatch of the web build was blocked by the permission classifier; not retried.
+
+## 2026-11-21 — Deploy fix: 25 MiB Pages file limit
+* First real web build (run #9): vector/photo/pdf all built, deploy failed. Wrangler: `Pages only supports files up to 25 MiB` (pdf wasm = 56.5 MiB). Earlier failure was just the missing Pages project `tulika` (created by hand with a placeholder zip).
+* Likely cause: CI env in web.yml forces `LTO=off` + `codegen-units=16` (done to avoid runner OOM), which makes the wasm much bigger than upstream's. Not yet fixed. Zipped artifact sizes: vector 38.5 MB, photo 27.7 MB, pdf 23.2 MB, so all three exceed 25 MiB raw.
+* New `tools/assemble_site.sh` (used by web.yml and the new `.github/workflows/site.yml`): copies `platform/web`, adds each app only if every file is <= 25 MiB, otherwise a placeholder page. `site.yml` deploys the dashboard and tools without any wasm build (runs on push to `platform/web/**` or by hand). Dry-run tested locally with a fake 25 MiB+1 file.
+* Note: each Pages deploy replaces the whole site; a site-only deploy removes previously deployed apps. Remove the push trigger in site.yml once the apps fit.

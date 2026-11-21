@@ -95,15 +95,9 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: |
-          mkdir -p site
-          cp -R platform/web/. site/
-          for a in vector photo pdf; do [ -d "artifacts/web-$a" ] && mkdir -p "site/$a" && cp -R "artifacts/web-$a/." "site/$a/"; done; true
-          printf 'window.TULIKA_CONFIG = { supabaseUrl: %s, supabaseAnonKey: %s };\n' \
-            "$(printf '%s' "$SUPABASE_URL" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))')" \
-            "$(printf '%s' "$SUPABASE_ANON_KEY" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read()))')" > site/config.js
+        run: tools/assemble_site.sh artifacts
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy site --project-name=tulika --branch=main
+          command: pages deploy site --project-name=tulika --branch=main --commit-dirty=true

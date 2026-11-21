@@ -1,0 +1,30 @@
+name: Site only deploy (dashboard + tools, no wasm builds)
+# Deploys platform/web to Cloudflare Pages in about a minute. The three wasm apps are replaced by
+# placeholder pages (use "Web build and deploy" for the full site). Runs by hand or on a push that
+# changes platform/web. Needs the same secrets and DEPLOY_PAGES variable as web.yml.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["platform/web/**", "tools/assemble_site.sh", ".github/workflows/site.yml"]
+
+concurrency:
+  group: site-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_PAGES == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: tools/assemble_site.sh artifacts-none
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=tulika --branch=main --commit-dirty=true
