@@ -139,3 +139,6 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 - Added 57 OFL families (tools/vendor_fonts.py → platform/web/vendor/fonts/more/, licences in licenses/OFL-*.txt), js/data/fonts_all.js (ALL_FONTS, fontOptions, fontNote, loadFontCss) and js/views/fontpicker.js (searchable picker with script/style chips); used by greet, forms, brand tools.
 - Language: font style notes, greeting presets, greeting backgrounds and AI hints now follow the EN/HI toggle. New tools/audit_lang.py lists leftover Devanagari in EN mode (only language names/examples remain; HI-mode leftovers are brand/product names).
 - Tests: tools/test_dashboard.py 98 PASS, 0 FAIL. Not yet verified live: Vector popup size, wheel zoom (Rust, needs CI).
+
+## 2026-11-21 (later) — Editor: gradient, shadow, align
+- `designs.js` layerSvg now supports per-layer gradient fill (`g2`, `ga`) and drop shadow (`sh`); `editor.js` panel gained gradient/shadow controls and align-to-page buttons (left/centre/right/top/middle/bottom). Tests: 101 PASS.

@@ -56,6 +56,16 @@ with sync_playwright() as p:
     n0 = pg.locator(".edcanvas svg [data-id]").count(); pg.click(".edpanel .btnrow .ghost >> nth=0"); pg.wait_for_timeout(250)
     ok(pg.locator(".edcanvas svg [data-id]").count() == n0 + 1, "editor: add text layer")
     pg.click("button[title='Ctrl+Z']"); pg.wait_for_timeout(250); ok(pg.locator(".edcanvas svg [data-id]").count() == n0, "editor: undo")
+    # gradient / shadow / align
+    pg.locator(".edcanvas svg text").first.click(); pg.wait_for_timeout(200)
+    pg.locator(".edpanel label.fld:has-text('Shadow'), .edpanel label.fld:has-text('छाया')").first.locator("input").check(); pg.wait_for_timeout(250)
+    ok(pg.locator(".edcanvas svg feDropShadow").count() >= 1, "editor: shadow adds a drop-shadow filter")
+    pg.locator(".edpanel label.fld:has-text('Gradient'), .edpanel label.fld:has-text('ग्रेडिएंट')").first.locator("input").check(); pg.wait_for_timeout(250)
+    ok(pg.locator(".edcanvas svg linearGradient[id^='g-']").count() == 1, "editor: gradient fill added")
+    pg.click(".edpanel button[title$=' l']"); pg.wait_for_timeout(250)
+    ok(pg.locator(".edcanvas svg text").first.bounding_box()["x"] < pg.locator(".edcanvas").bounding_box()["x"] + 8, "editor: align left works")
+    for _ in range(3): pg.click("button[title='Ctrl+Z']")
+    pg.wait_for_timeout(250)
     for label, sel_, magic in [("PNG", ".page-head .btnrow .primary", b"\x89PNG"), ("PDF", "text=PDF", b"%PDF"), ("SVG", ".page-head .btnrow button:has-text('SVG')", b"<svg")]:
         with pg.expect_download(timeout=20000) as dl: pg.click(sel_)
         data = open(dl.value.path(), "rb").read(); ok(data[:len(magic)] == magic, f"editor: {label} export is a valid file ({len(data)//1024} KB)")

@@ -93,6 +93,13 @@ export async function render(ctx) {
     layersBox.textContent = "";
     for (const l of [...d.layers].reverse()) layersBox.append(h("button.edlayer" + (l.id === sel ? ".on" : ""), { type: "button", onclick: () => { sel = l.id; draw(); panelRender(); } }, h("small", l.t === "text" ? "T" : l.t === "rect" ? "▭" : l.t === "circle" ? "●" : l.t === "ring" ? "◯" : "◆"), h("span", name(l))));
   }
+  function nudge(l, dx, dy) { if (l.t === "poly") l.points = l.points.map(([x, y]) => [x + dx, y + dy]); else if (l.t === "path") { l.dx = (l.dx || 0) + dx; l.dy = (l.dy || 0) + dy; } else { l.x = Math.round(l.x + dx); l.y = Math.round(l.y + dy); } }
+  function align(k) {
+    const l = layer(), el = canvas.querySelector(`[data-id="${l?.id}"]`); if (!l || !el) return; const b = el.getBBox(); let dx = 0, dy = 0;
+    if (k === "l") dx = 0 - b.x; if (k === "c") dx = d.W / 2 - (b.x + b.width / 2); if (k === "r") dx = d.W - (b.x + b.width);
+    if (k === "t") dy = 0 - b.y; if (k === "m") dy = d.H / 2 - (b.y + b.height / 2); if (k === "b") dy = d.H - (b.y + b.height);
+    nudge(l, dx, dy); commit(); draw();
+  }
   function panelRender() {
     const l = layer(); panel.textContent = "";
     panel.append(
@@ -111,7 +118,11 @@ export async function render(ctx) {
       else if (l.t === "ring") f.push(row(L("रंग", "Colour"), colour(l.stroke, (v) => (l.stroke = v))), row(L("मोटाई", "Thickness"), range(1, 60, l.sw || 4, (v) => (l.sw = v))), row(L("आकार", "Size"), range(5, 900, l.r, (v) => (l.r = v))));
       else if (l.t === "rect" || l.t === "circle") f.push(row(L("रंग", "Colour"), colour(l.fill === "none" ? "#ffffff" : l.fill, (v) => (l.fill = v))), l.t === "circle" ? row(L("आकार", "Size"), range(5, 900, l.r, (v) => (l.r = v))) : h("div.grid2", row(L("चौड़ाई", "Width"), range(5, d.W * 1.2, l.w, (v) => (l.w = v))), row(L("ऊँचाई", "Height"), range(5, d.H * 1.2, l.h, (v) => (l.h = v)))), l.t === "rect" ? row(L("गोलाई", "Corners"), range(0, 200, l.rx || 0, (v) => (l.rx = v))) : null);
       else f.push(row(L("रंग", "Colour"), colour(l.fill, (v) => (l.fill = v))));
-      f.push(row(L("पारदर्शिता", "Opacity"), range(0.05, 1, l.op ?? 1, (v) => (l.op = v), 0.05)),
+      if (l.t !== "ring") f.push(h("div.grid2", row(L("ग्रेडिएंट", "Gradient"), h("input", { type: "checkbox", checked: !!l.g2, onchange: (e) => { l.g2 = e.target.checked ? (l.g2 || "#ffffff") : null; commit(); draw(); panelRender(); } })), l.g2 ? row(L("रंग 2", "Colour 2"), colour(l.g2, (v) => (l.g2 = v))) : null), l.g2 ? row(L("कोण", "Angle"), range(0, 360, l.ga ?? 90, (v) => (l.ga = v))) : null);
+      f.push(row(L("छाया", "Shadow"), h("input", { type: "checkbox", checked: !!l.sh, onchange: (e) => { l.sh = e.target.checked ? { c: "#000000", b: 14, x: 6, y: 8, o: 0.5 } : null; commit(); draw(); panelRender(); } })),
+        l.sh ? h("div.grid2", row(L("छाया रंग", "Shadow colour"), colour(l.sh.c, (v) => (l.sh.c = v))), row(L("धुंधलापन", "Blur"), range(0, 60, l.sh.b, (v) => (l.sh.b = v)))) : null,
+        h("div.btnrow", [["⇤", "l"], ["↔", "c"], ["⇥", "r"], ["⤒", "t"], ["↕", "m"], ["⤓", "b"]].map(([lb, k]) => h("button.ghost", { title: L("पेज के हिसाब से संरेखित", "Align to page") + " " + k, onclick: () => align(k) }, lb))),
+        row(L("पारदर्शिता", "Opacity"), range(0.05, 1, l.op ?? 1, (v) => (l.op = v), 0.05)),
         h("div.btnrow", h("button.ghost", { onclick: dup, title: "Duplicate" }, icon("copy", 16)), h("button.ghost", { onclick: () => order(1), title: "Forward" }, "↑"), h("button.ghost", { onclick: () => order(-1), title: "Backward" }, "↓"), h("button.danger", { onclick: del }, icon("trash", 16))));
       panel.append(h("section.card", h("h3", L("चुना हुआ", "Selected")), ...f));
     } else panel.append(h("section.card", h("small", L("किसी भी चीज़ पर क्लिक कीजिए, खींचकर हिलाइए, कोने के गोले से बड़ा/छोटा कीजिए।", "Click anything, drag to move, use the corner dot to resize."))));

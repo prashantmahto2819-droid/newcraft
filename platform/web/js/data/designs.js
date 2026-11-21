@@ -143,7 +143,7 @@ export function buildDesign(tp) {
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fam = (f) => `'${f}','Noto Sans Devanagari',sans-serif`;
 
-export function layerSvg(l) {
+function baseSvg(l) {
   const op = l.op ?? 1, tf = l.rot ? ` transform="rotate(${l.rot} ${l.x} ${l.y})"` : "", d = `data-id="${l.id}"`;
   if (l.t === "rect") return `<rect ${d} x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" rx="${l.rx || 0}" fill="${l.fill}" ${l.stroke ? `stroke="${l.stroke}" stroke-width="${l.sw || 2}"` : ""} opacity="${op}"${tf}/>`;
   if (l.t === "circle") return `<circle ${d} cx="${l.x}" cy="${l.y}" r="${l.r}" fill="${l.fill}" opacity="${op}"/>`;
@@ -156,6 +156,20 @@ export function layerSvg(l) {
     return `<text ${d} x="${l.x}" y="${y0}" font-family="${fam(l.font)}" font-size="${l.size}" font-weight="${l.weight || 700}" fill="${l.fill}" opacity="${op}" text-anchor="${anchor}" dominant-baseline="central"${l.stroke ? ` stroke="${l.stroke}" stroke-width="${l.sw || 4}" paint-order="stroke"` : ""}${tf} style="white-space:pre">${lines.map((s, i) => `<tspan x="${l.x}" dy="${i ? lh : 0}">${esc(s) || " "}</tspan>`).join("")}</text>`;
   }
   return "";
+}
+// gradient fill (l.g2 second colour, l.ga angle) and drop shadow (l.sh = {c,b,x,y}) are layered on top of the plain shapes
+export function layerSvg(l) {
+  let defs = "", L2 = l;
+  if (l.g2 && l.fill && l.fill !== "none" && l.t !== "ring") {
+    defs += `<linearGradient id="g-${l.id}" gradientTransform="rotate(${l.ga ?? 90} .5 .5)"><stop offset="0" stop-color="${l.fill}"/><stop offset="1" stop-color="${l.g2}"/></linearGradient>`;
+    L2 = { ...l, fill: `url(#g-${l.id})` };
+  }
+  let out = baseSvg(L2);
+  if (l.sh) {
+    defs += `<filter id="s-${l.id}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="${l.sh.x ?? 6}" dy="${l.sh.y ?? 8}" stdDeviation="${(l.sh.b ?? 12) / 2}" flood-color="${l.sh.c || "#000000"}" flood-opacity="${l.sh.o ?? 0.5}"/></filter>`;
+    out = `<g filter="url(#s-${l.id})">${out}</g>`;
+  }
+  return defs ? `<defs>${defs}</defs>${out}` : out;
 }
 export function designSvg(d, { fontCss = "", id: sid = "d" } = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${d.W} ${d.H}" width="${d.W}" height="${d.H}" data-w="${d.W}" data-h="${d.H}"><defs>${fontCss ? `<style>${fontCss}</style>` : ""}<linearGradient id="bg${sid}" gradientTransform="rotate(${d.bg[2] ?? 135} .5 .5)"><stop offset="0" stop-color="${d.bg[0]}"/><stop offset="1" stop-color="${d.bg[1]}"/></linearGradient></defs><rect width="${d.W}" height="${d.H}" fill="url(#bg${sid})"/>${d.layers.map(layerSvg).join("")}</svg>`;
