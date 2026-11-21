@@ -264,6 +264,16 @@ fn changes(d: &SequenceSettingsDraft, cur: &SequenceSettings, cur_name: &str) ->
 
 type Elems = Vec<(String, egui::Rect, String)>;
 
+/// New Sequence quick presets: label, width, height, frames per second.
+const QUICK_PRESETS: &[(&str, u32, u32, i64)] = &[
+    ("Reel / Shorts 9:16", 1080, 1920, 30),
+    ("YouTube 16:9", 1920, 1080, 30),
+    ("Square post 1:1", 1080, 1080, 30),
+    ("Portrait post 4:5", 1080, 1350, 30),
+    ("Podcast 16:9", 1920, 1080, 25),
+    ("4K 16:9", 3840, 2160, 30),
+];
+
 /// One labelled row: the label right-aligned in a `label_w` column, then the control.
 fn row<R>(ui: &mut egui::Ui, label_w: f32, label: &str, enabled: bool, add: impl FnOnce(&mut egui::Ui) -> R) -> R {
     ui.horizontal(|ui| {
@@ -524,6 +534,24 @@ pub fn show(app: &mut FilmcraftApp, ctx: &egui::Context) -> bool {
                 }
             });
             ui.separator();
+            // Tulika: one-click frame presets for the usual destinations (New Sequence only).
+            if new_sequence {
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(tl!("Quick presets:"));
+                    for &(label, w, h, num) in QUICK_PRESETS {
+                        let r = ui.button(t(label)).on_hover_text(format!("{w} × {h}, {num} fps"));
+                        if r.clicked() {
+                            d.width = w;
+                            d.height = h;
+                            d.fps_num = num;
+                            d.fps_den = 1;
+                            d.drop_frame = false;
+                        }
+                        elems.push((format!("sequenceSettings.quick.{w}x{h}"), r.rect, label.to_string()));
+                    }
+                });
+                ui.separator();
+            }
             egui::ScrollArea::vertical().max_height(max_h).auto_shrink([false, true]).show(ui, |ui| match d.tab.as_str() {
                 "color" if !new_sequence => color(ui, &mut d, &mut elems),
                 "tracks" if new_sequence => tracks(ui, &mut d, &mut elems),
