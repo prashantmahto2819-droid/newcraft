@@ -7,7 +7,7 @@
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock, PoisonError};
-use std::time::Instant;
+use web_time::Instant; // Tulika: std Instant panics on the web
 
 use craft::behavior::geometry::quad::Homography;
 use craft::behavior::kurbo::Point;

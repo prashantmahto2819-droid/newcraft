@@ -13,7 +13,7 @@
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
-use std::time::Instant;
+use web_time::Instant; // Tulika: std Instant panics on the web
 
 use craft::behavior::kurbo;
 use craft::imaging::ui::fill::{ContentAwareFillWorkspace, FillCommand, FillPreviewRequest, FillSession, FillSource, SamplingPlane, SamplingStroke};
