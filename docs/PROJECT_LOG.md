@@ -159,3 +159,4 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 
 ## 2026-11-21 (build trigger) — web.yml can be started by a push
 - `.github/web-build.request` (line 1 = JSON list of apps). A change to it on main starts `web.yml`; used to start the first film web build.
+- Live check (cloud browser, no WebGL there): /photo/ and /film/ load their wasm from R2 and run up to GPU surface creation (fail only for lack of WebGL2 in that browser); /pdf/ shows a blank page there (inconclusive). A `web-film` build is already live. Request 2 rebuilds all four apps (vector needs it for wheel zoom + template-size fixes). Note: a push to web-build.request cancels a running web.yml run (concurrency group).
