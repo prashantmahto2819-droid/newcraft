@@ -259,6 +259,7 @@ with sync_playwright() as p:
     c.wait_for_selector(".modal"); c.click(".modal-foot .primary"); c.wait_for_timeout(300); c.screenshot(path=f"{OUT}/cloud_home_mobile.png")
     c.goto(U + "#/projects"); c.wait_for_timeout(300); ok(c.locator(".pcard").count() == 1, "cloud project created and listed")
     # ---- access control: admin approves a pending account; a pending account only sees the waiting screen
+    c.set_viewport_size({"width": 390, "height": 780}); c.goto(U + "#/settings"); c.wait_for_selector("#accesscard"); c.click("#open-admin"); c.wait_for_selector(".adminrow"); ok(True, "admin page opens from Settings on a phone"); c.set_viewport_size({"width": 1280, "height": 900})
     c.goto(U + "#/admin"); c.wait_for_selector(".adminrow"); ok(c.locator(".adminrow").count() == 2 and c.locator(".adminrow[data-status=pending]").count() == 1, "admin page lists accounts with one pending")
     c.locator(".adminrow[data-status=pending] button.primary").click(); c.wait_for_timeout(400); ok(c.locator(".adminrow[data-status=pending]").count() == 0, "admin approves a pending account")
     ok(c.locator(".admindevs .chip").count() == 1, "admin page shows the registered device")
