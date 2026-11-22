@@ -9,7 +9,7 @@ srv = http.server.ThreadingHTTPServer(("127.0.0.1", 8766), functools.partial(Q, 
 U = "http://127.0.0.1:8766/"; fails = []
 def ok(c, m): print(("PASS " if c else "FAIL ") + m); (not c) and fails.append(m)
 MOCK = """
-export function createClient(){ const rows={projects:[],brand_kits:[],profiles:[]}; let session=null; const files={};
+export function createClient(){ const rows={projects:[],brand_kits:[],profiles:[],devices:[]}; let session=null; const files={};
  const q=(t)=>{ let f=null,patch=null,ins=null,del=false; const o={select(){return o},order(){return o},limit(){return o},eq(c,v){f=[c,v];return o},
   insert(r){ins=r;return o},update(p){patch=p;return o},delete(){del=true;return o},
   single(){return o.then(r=>({data:Array.isArray(r.data)?r.data[0]:r.data,error:null}))},maybeSingle(){return o.single()},
@@ -19,7 +19,7 @@ export function createClient(){ const rows={projects:[],brand_kits:[],profiles:[
    return Promise.resolve({data:d,error:null}).then(res)}}; return o};
  return {auth:{getSession:async()=>({data:{session}}),getUser:async()=>({data:{user:{id:'u1',email:'a@b.c'}}}),onAuthStateChange(cb){window.__authcb=cb},
   signInWithPassword:async({email})=>{session={user:{id:'u1',email}};const pend=email.startsWith('pending');rows.profiles=[{id:'u1',email,status:pend?'pending':'approved',is_admin:!pend,plan:'free',valid_until:null,created_at:new Date().toISOString()},{id:'u2',email:'new@b.c',status:'pending',is_admin:false,plan:'free',valid_until:null,created_at:new Date().toISOString()}];window.__authcb&&window.__authcb('SIGNED_IN',session);return{error:null}},signOut:async()=>{session=null;window.__authcb&&window.__authcb('SIGNED_OUT',null)}},
-  rpc:async(fn,a)=>{ if(fn==='admin_list_users')return{data:rows.profiles,error:null}; const r=rows.profiles.find(x=>x.id===a.target); Object.assign(r,{status:a.new_status,plan:a.new_plan||r.plan,valid_until:a.new_valid_until}); return{data:r,error:null} },
+  rpc:async(fn,a)=>{ if(fn==='admin_list_users')return{data:rows.profiles,error:null}; if(fn==='admin_list_devices')return{data:rows.devices,error:null}; if(fn==='register_device'){ if(session.user.email.startsWith('limit'))return{data:{ok:false,reason:'device_limit',devices:2,max_devices:2},error:null}; if(!rows.devices.length)rows.devices.push({id:'d1',user_id:'u1',device_id:a.p_device_id,name:a.p_name,platform:'web',last_seen:new Date().toISOString()}); return{data:{ok:true,devices:1,max_devices:2},error:null} } if(fn==='remove_device'){rows.devices=rows.devices.filter(d=>d.id!==a.p_id);return{data:true,error:null}} if(fn==='admin_set_max_devices'){rows.profiles.find(x=>x.id===a.target).max_devices=a.n;return{data:a.n,error:null}} const r=rows.profiles.find(x=>x.id===a.target); Object.assign(r,{status:a.new_status,plan:a.new_plan||r.plan,valid_until:a.new_valid_until}); return{data:r,error:null} },
   from:q, storage:{from:()=>({upload:async(p,f)=>{files[p]=f;return{error:null}},download:async(p)=>({data:files[p],error:null}),remove:async()=>({})})}} }
 """
 with sync_playwright() as p:
@@ -261,6 +261,12 @@ with sync_playwright() as p:
     # ---- access control: admin approves a pending account; a pending account only sees the waiting screen
     c.goto(U + "#/admin"); c.wait_for_selector(".adminrow"); ok(c.locator(".adminrow").count() == 2 and c.locator(".adminrow[data-status=pending]").count() == 1, "admin page lists accounts with one pending")
     c.locator(".adminrow[data-status=pending] button.primary").click(); c.wait_for_timeout(400); ok(c.locator(".adminrow[data-status=pending]").count() == 0, "admin approves a pending account")
+    ok(c.locator(".admindevs .chip").count() == 1, "admin page shows the registered device")
+    c3 = b.new_page(viewport={"width": 390, "height": 780}); c3.on("pageerror", lambda e: errs.append(str(e)))
+    c3.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))
+    c3.route("https://esm.sh/**", lambda r: r.fulfill(content_type="text/javascript", body=MOCK))
+    c3.goto(U); c3.wait_for_selector(".login"); c3.fill("input[type=email]", "limit@b.c"); c3.fill("input[type=password]", "secret12"); c3.click(".login .primary"); c3.wait_for_selector("#waiting")
+    ok("limit" in c3.locator("#waiting h1").inner_text().lower() or "सीमा" in c3.locator("#waiting h1").inner_text(), "an account over its device limit is stopped")
     c2 = b.new_page(viewport={"width": 390, "height": 780}); c2.on("pageerror", lambda e: errs.append(str(e)))
     c2.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))
     c2.route("https://esm.sh/**", lambda r: r.fulfill(content_type="text/javascript", body=MOCK))

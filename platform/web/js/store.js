@@ -14,6 +14,7 @@ class DemoStore {
   onAuth() {} async signIn() {} async signUp() {} async signOut() {} async resetPassword() {} async magicLink() {}
   async access() { return { ok: true, status: "approved", is_admin: false, plan: "demo", valid_until: null }; }
   async adminUsers() { return []; } async adminSet() {}
+  async registerDevice() { return { ok: true, devices: 1, max_devices: 1 }; } async myDevices() { return []; } async removeDevice() {} async adminDevices() { return []; } async adminMaxDevices() {}
   async listProjects() { return [...this.db.projects]; }
   async createProject({ app, name, meta = {}, file }) {
     const p = { id: uid(), app, name: name || "", file_name: file?.name || null, size_bytes: file?.size || 0, favorite: false, meta, created_at: now(), updated_at: now() };
@@ -58,6 +59,14 @@ class CloudStore {
     return { ...p, expired, ok: p.status === "approved" && !expired };
   }
   async adminUsers() { const { data, error } = await this.sb.rpc("admin_list_users"); if (error) throw error; return data || []; }
+  // device licences (migration 0004): this browser registers once under a random id kept in localStorage
+  async registerDevice() {
+    const { data, error } = await this.sb.rpc("register_device", { p_device_id: deviceId(), p_name: deviceName(), p_platform: "web" }); if (error) throw error; return data;
+  }
+  async myDevices() { const { data, error } = await this.sb.from("devices").select("id,device_id,name,platform,last_seen").order("last_seen", { ascending: false }); if (error) throw error; return (data || []).map((d) => ({ ...d, current: d.device_id === deviceId() })); }
+  async removeDevice(id) { const { error } = await this.sb.rpc("remove_device", { p_id: id }); if (error) throw error; }
+  async adminDevices() { const { data, error } = await this.sb.rpc("admin_list_devices"); if (error) throw error; return data || []; }
+  async adminMaxDevices(id, n) { const { error } = await this.sb.rpc("admin_set_max_devices", { target: id, n }); if (error) throw error; }
   async adminSet(id, { status, plan = null, valid_until = null, make_admin = null }) {
     const { data, error } = await this.sb.rpc("admin_set_access", { target: id, new_status: status, new_plan: plan, new_valid_until: valid_until, make_admin }); if (error) throw error; return data;
   }
@@ -94,6 +103,16 @@ class CloudStore {
   async exportAll() { return { projects: await this.listProjects(), kits: await this.listKits() }; }
   async aiText(task, prompt) { const { data, error } = await this.sb.functions.invoke("ai-text", { body: { task, prompt } }); if (error) throw error; if (data?.error) throw new Error(data.error); return data.text; }
   async reset() {}
+}
+
+function deviceId() {
+  try { let v = localStorage.getItem("tulika-device"); if (!v) { v = "web-" + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); localStorage.setItem("tulika-device", v); } return v; }
+  catch { return "web-session-" + Math.random().toString(36).slice(2, 12); }
+}
+function deviceName() {
+  const u = navigator.userAgent, os = /Windows/.test(u) ? "Windows" : /Android/.test(u) ? "Android" : /iPhone|iPad/.test(u) ? "iOS" : /Mac/.test(u) ? "macOS" : /Linux/.test(u) ? "Linux" : "";
+  const br = /Edg\//.test(u) ? "Edge" : /Chrome\//.test(u) ? "Chrome" : /Firefox\//.test(u) ? "Firefox" : /Safari\//.test(u) ? "Safari" : "Browser";
+  return `${br}${os ? " · " + os : ""}`;
 }
 
 export async function createStore() {

@@ -80,11 +80,14 @@ function waitingView(a) {
   const hi = getLang() === "hi";
   const msg = a.status === "blocked" ? (hi ? "यह खाता रोक दिया गया है। एडमिन से संपर्क कीजिए।" : "This account has been blocked. Please contact the admin.")
     : a.expired ? (hi ? "आपके प्लान की अवधि पूरी हो गई है। आगे चलाने के लिए एडमिन से प्लान बढ़वाइए।" : "Your plan has ended. Ask the admin to renew it.")
+    : a.reason === "device_limit" ? (hi ? `यह खाता पहले से ${a.max_devices} डिवाइस पर चल रहा है, जो इसकी सीमा है। नीचे से कोई पुराना डिवाइस हटाइए या एडमिन से सीमा बढ़वाइए।` : `This account is already in use on ${a.max_devices} devices, which is its limit. Remove an old device below or ask the admin for more.`)
     : (hi ? "आपका खाता बन गया है। एडमिन की मंज़ूरी के बाद आप Tulika इस्तेमाल कर पाएँगे।" : "Your account is created. You can use Tulika once an admin approves it.");
+  const devs = h("div", { id: "mydevices", style: { display: "flex", flexDirection: "column", gap: "6px" } });
+  if (a.reason === "device_limit") ctx.store.myDevices().then((list) => list.forEach((d) => devs.append(h("div.setrow", h("span", d.name || d.platform || d.device_id), h("button.ghost", { onclick: async () => { try { await ctx.store.removeDevice(d.id); location.reload(); } catch (e) { toast(e.message || t("error"), "err"); } } }, hi ? "हटाएँ" : "Remove"))))).catch(console.error);
   root.textContent = "";
   root.append(h("div.login", h("div.card", { id: "waiting" },
-    h("img", { src: "icons/mark.svg", alt: "", width: 56, height: 56 }), h("h1", hi ? "मंज़ूरी का इंतज़ार" : "Waiting for approval"),
-    h("p", { style: { textAlign: "center" } }, msg), h("small", ctx.user?.email || ""),
+    h("img", { src: "icons/mark.svg", alt: "", width: 56, height: 56 }), h("h1", a.reason === "device_limit" ? (hi ? "डिवाइस की सीमा पूरी" : "Device limit reached") : (hi ? "मंज़ूरी का इंतज़ार" : "Waiting for approval")),
+    h("p", { style: { textAlign: "center" } }, msg), h("small", ctx.user?.email || ""), devs,
     h("button.primary.wide", { onclick: () => location.reload() }, hi ? "फिर जाँचें" : "Check again"),
     h("button.ghost", { onclick: () => ctx.store.signOut() }, t("sign_out")))));
 }
@@ -96,6 +99,7 @@ async function start() {
     ctx.user = user; if (!user) return loginView();
     try { ctx.access = await ctx.store.access(); } catch (e) { console.error(e); ctx.access = { ok: false, status: "pending" }; }
     if (!ctx.access.ok) return waitingView(ctx.access);
+    try { const d = await ctx.store.registerDevice(); if (d && d.ok === false && d.reason === "device_limit") return waitingView({ ...ctx.access, ...d }); ctx.devices = d; } catch (e) { console.error(e); }
     buildShell(); await refresh();
   };
   const { user } = await ctx.store.init(); ctx.store.onAuth((u) => boot(u)); await boot(user);

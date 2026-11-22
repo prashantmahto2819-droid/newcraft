@@ -118,3 +118,4 @@ a.primary,a.ghost{text-decoration:none}
 .edtog{cursor:pointer;opacity:.7;font-size:13px}.edtog:hover{opacity:1}
 .adminlist{display:flex;flex-direction:column;gap:10px}.adminrow{display:grid;grid-template-columns:minmax(180px,2fr) 1fr 1fr auto;gap:12px;align-items:end}.adminwho{display:flex;flex-direction:column;gap:2px;min-width:0;align-self:center}.adminwho b{overflow:hidden;text-overflow:ellipsis}.adminrow[data-status=pending]{border-color:var(--accent,#14b8a6)}
 @media(max-width:820px){.adminrow{grid-template-columns:1fr}}
+.admindevs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:end;border-top:1px solid var(--line);padding-top:10px}
