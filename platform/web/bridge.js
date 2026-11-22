@@ -131,7 +131,11 @@ async function gate() {
         : a.expired ? T("आपके प्लान की अवधि पूरी हो गई है।", "Your plan has ended.")
         : T("आपका खाता एडमिन की मंज़ूरी का इंतज़ार कर रहा है।", "Your account is waiting for admin approval.");
     }
-  } catch (e) { console.error(e); return true; } // cloud unreachable: do not lock people out of local work
+  } catch (e) {
+    console.error(e);
+    if (!(window.TULIKA_CONFIG && window.TULIKA_CONFIG.supabaseUrl)) return true; // no cloud configured: open
+    msg = T("सर्वर से जुड़ नहीं सका। इंटरनेट जाँचकर पेज फिर खोलिए।", "Could not reach the server. Check the internet and reload.");
+  }
   const o = document.createElement("div"); o.id = "tulika-gate";
   o.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#e5e7eb;display:grid;place-items:center;font:16px system-ui;text-align:center;padding:24px";
   const box = document.createElement("div"), p = document.createElement("p"), a = document.createElement("a");

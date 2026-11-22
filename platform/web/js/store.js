@@ -99,11 +99,13 @@ class CloudStore {
 export async function createStore() {
   const c = window.TULIKA_CONFIG || {};
   const forceDemo = (() => { try { return localStorage.getItem("tulika-force-demo") === "1" || new URLSearchParams(location.search).has("demo"); } catch { return false; } })();
-  if (!forceDemo && c.supabaseUrl && !c.supabaseUrl.includes("YOUR-PROJECT") && c.supabaseAnonKey) {
-    try {
-      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-      return new CloudStore(createClient(c.supabaseUrl, c.supabaseAnonKey));
-    } catch (e) { console.warn("Supabase failed to load, using demo mode", e); }
+  const cloud = !!(c.supabaseUrl && !c.supabaseUrl.includes("YOUR-PROJECT") && c.supabaseAnonKey);
+  // Demo mode exists only where no cloud is configured: with the cloud set up every account needs admin
+  // approval, so neither ?demo nor a failed network load may fall back to the open demo store.
+  if (cloud) {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    return new CloudStore(createClient(c.supabaseUrl, c.supabaseAnonKey));
   }
+  void forceDemo;
   return new DemoStore();
 }

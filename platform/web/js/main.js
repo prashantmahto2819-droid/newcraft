@@ -50,7 +50,7 @@ function loginView() {
     h("div.btnrow", h("button.ghost", { type: "button", onclick: run(() => ctx.store.signUp(email.value, pass.value), t("check_email")) }, t("sign_up")),
       h("button.ghost", { type: "button", onclick: run(() => ctx.store.magicLink(email.value), t("check_email")) }, t("magic_link")),
       h("button.ghost", { type: "button", onclick: run(() => ctx.store.resetPassword(email.value), t("check_email")) }, t("forgot"))),
-    h("button.link", { type: "button", onclick: () => { try { localStorage.setItem("tulika-force-demo", "1"); } catch {} location.reload(); } }, t("try_demo"))),
+    ctx.store.mode === "cloud" ? null : h("button.link", { type: "button", onclick: () => { try { localStorage.setItem("tulika-force-demo", "1"); } catch {} location.reload(); } }, t("try_demo"))),
     h("div", { style: { position: "fixed", top: "12px", right: "12px" } }, h("button.ghost", { onclick: () => { import("./i18n.js").then((m) => { m.setLang(getLang() === "hi" ? "en" : "hi"); loginView(); }); } }, getLang() === "hi" ? "EN" : "हिं"))));
 }
 
