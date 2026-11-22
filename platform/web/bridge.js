@@ -110,4 +110,35 @@ async function main() {
   }
   status(T("ऐप तैयार नहीं हुआ — फ़ाइल डाउनलोड कर के खोलें", "app not ready — download the file and open it manually"));
 }
-main();
+// Access gate: with the cloud configured, the app is usable only when signed in and approved by an admin
+// (and within the plan's dates). It covers the app with a notice otherwise. This runs in the page, so it
+// keeps honest users out; the data itself is protected by the database rules (migration 0003).
+async function gate() {
+  if (!window.TULIKA_CONFIG) {
+    await new Promise((res) => { const s = document.createElement("script"); s.src = new URL("../config.js", import.meta.url); s.onload = s.onerror = res; document.head.append(s); });
+  }
+  let msg = "";
+  try {
+    const { createStore } = await import("./js/store.js");
+    const store = await createStore();
+    if (store.mode !== "cloud") return true;
+    const { user } = await store.init();
+    if (!user) msg = T("Tulika चलाने के लिए पहले साइन इन कीजिए।", "Sign in to use Tulika.");
+    else {
+      const a = await store.access();
+      if (a.ok) return true;
+      msg = a.status === "blocked" ? T("यह खाता रोक दिया गया है।", "This account has been blocked.")
+        : a.expired ? T("आपके प्लान की अवधि पूरी हो गई है।", "Your plan has ended.")
+        : T("आपका खाता एडमिन की मंज़ूरी का इंतज़ार कर रहा है।", "Your account is waiting for admin approval.");
+    }
+  } catch (e) { console.error(e); return true; } // cloud unreachable: do not lock people out of local work
+  const o = document.createElement("div"); o.id = "tulika-gate";
+  o.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#e5e7eb;display:grid;place-items:center;font:16px system-ui;text-align:center;padding:24px";
+  const box = document.createElement("div"), p = document.createElement("p"), a = document.createElement("a");
+  p.textContent = msg; a.textContent = T("डैशबोर्ड खोलें", "Open the dashboard"); a.href = new URL("../", location.href).href;
+  a.style.cssText = "display:inline-block;margin-top:14px;padding:10px 18px;border-radius:999px;background:#14b8a6;color:#04201c;font-weight:600;text-decoration:none";
+  box.append(p, a); o.append(box); document.body.append(o);
+  return false;
+}
+
+gate().then((ok) => { if (ok) main(); });

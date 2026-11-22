@@ -167,10 +167,8 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     app.ui.status = e;
                 }
             }
-            if discord {
-                ui.add_space(10.0);
-                crate::community::discord_button(app, ui, false);
-            }
+            // Tulika: the community (GitHub Discussions) button is not shown in the bar.
+            let _ = discord;
             if app.services.native_menu.is_some() {
                 let title = ui.painter().layout_no_wrap("Tulika Vector".into(), egui::FontId::proportional(13.5), t.text);
                 let title_rect = egui::Rect::from_center_size(full.center(), title.size());

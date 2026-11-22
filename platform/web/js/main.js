@@ -5,7 +5,7 @@ import { importFiles, newProjectModal } from "./views/shared.js";
 import { applyTheme, getTheme, shortcutsModal } from "./views/settings.js";
 
 const ROUTES = { home: ["nav_home", "home"], projects: ["nav_projects", "folder"], templates: ["nav_templates", "grid"], brand: ["nav_brand", "palette"], tools: ["nav_tools", "wand"], downloads: ["nav_downloads", "download"], settings: ["nav_settings", "settings"] };
-const HIDDEN = { editor: ["nav_templates", "grid"] };
+const HIDDEN = { editor: ["nav_templates", "grid"], admin: ["nav_admin", "settings"] };
 const KEYS = { h: "home", p: "projects", t: "templates", b: "brand", x: "tools", d: "downloads", s: "settings" };
 const ctx = { store: null, user: null, projects: [], refresh, rerender, relayout };
 let root, main, route = "home";
@@ -29,7 +29,7 @@ function buildShell() {
   root.append(
     h("aside.sidebar", h("div.logo", h("img", { src: "icons/mark.svg", alt: "", width: 34, height: 34 }), h("div", h("b", "TULIKA"), h("small", t("app_name")))),
       h("button.primary.wide", { onclick: () => newProjectModal(ctx) }, icon("plus", 18), t("new_project")),
-      h("nav", keys.map((k) => link(k, ".navlink"))),
+      h("nav", keys.map((k) => link(k, ".navlink")), ctx.access?.is_admin ? h("a.navlink", { href: "#/admin", "data-route": "admin" }, icon("settings", 21), h("span", t("nav_admin"))) : null),
       h("div.sidefoot", ctx.store.mode === "demo" ? h("span.badge.warn", "DEMO") : h("small", ctx.user?.email || ""),
         h("button.icon-btn", { "aria-label": "theme", onclick: () => { const d = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); applyTheme(d === "dark" ? "light" : "dark"); } }, icon("sun", 19)),
         ctx.store.mode === "cloud" ? h("button.icon-btn", { "aria-label": t("sign_out"), onclick: () => ctx.store.signOut() }, icon("logout", 19)) : null)),
@@ -70,15 +70,34 @@ function setupGlobal() {
     else if (e.key === "n") newProjectModal(ctx);
     else if (e.key === "?") shortcutsModal();
   });
-  addEventListener("hashchange", () => { route = parse(); if (ctx.user) rerender(); });
+  addEventListener("hashchange", () => { route = parse(); if (ctx.user && ctx.access?.ok) rerender(); });
   addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); window.__pwaPrompt = e; if (route === "downloads") rerender(); });
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// Shown instead of the app while the account waits for an admin, is blocked, or its plan has ended.
+function waitingView(a) {
+  const hi = getLang() === "hi";
+  const msg = a.status === "blocked" ? (hi ? "यह खाता रोक दिया गया है। एडमिन से संपर्क कीजिए।" : "This account has been blocked. Please contact the admin.")
+    : a.expired ? (hi ? "आपके प्लान की अवधि पूरी हो गई है। आगे चलाने के लिए एडमिन से प्लान बढ़वाइए।" : "Your plan has ended. Ask the admin to renew it.")
+    : (hi ? "आपका खाता बन गया है। एडमिन की मंज़ूरी के बाद आप Tulika इस्तेमाल कर पाएँगे।" : "Your account is created. You can use Tulika once an admin approves it.");
+  root.textContent = "";
+  root.append(h("div.login", h("div.card", { id: "waiting" },
+    h("img", { src: "icons/mark.svg", alt: "", width: 56, height: 56 }), h("h1", hi ? "मंज़ूरी का इंतज़ार" : "Waiting for approval"),
+    h("p", { style: { textAlign: "center" } }, msg), h("small", ctx.user?.email || ""),
+    h("button.primary.wide", { onclick: () => location.reload() }, hi ? "फिर जाँचें" : "Check again"),
+    h("button.ghost", { onclick: () => ctx.store.signOut() }, t("sign_out")))));
 }
 
 async function start() {
   root = document.getElementById("app"); root.classList.remove("boot"); applyTheme(getTheme()); document.documentElement.lang = getLang();
   ctx.store = await createStore(); window.TULIKA_STORE = ctx.store; route = parse(); setupGlobal();
-  const boot = async (user) => { ctx.user = user; if (!user) return loginView(); buildShell(); await refresh(); };
+  const boot = async (user) => {
+    ctx.user = user; if (!user) return loginView();
+    try { ctx.access = await ctx.store.access(); } catch (e) { console.error(e); ctx.access = { ok: false, status: "pending" }; }
+    if (!ctx.access.ok) return waitingView(ctx.access);
+    buildShell(); await refresh();
+  };
   const { user } = await ctx.store.init(); ctx.store.onAuth((u) => boot(u)); await boot(user);
   const q = new URLSearchParams(location.search); if (q.get("new")) newProjectModal(ctx, { app: q.get("new") });
 }

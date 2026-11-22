@@ -82,3 +82,4 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 - tools/audit_tools.py — sweep of every route/tool for JS errors (HI+EN).
 - .github/web-build.request — edit + push to start web.yml for the listed apps.
 - platform/web/vendor/fonts/list.json — font files Film web loads at start through window.filmcraft.addFont.
+- platform/web/js/views/admin.js — admin page (users, approval, plans); platform/supabase/migrations/0003_access_control.sql — access rules.

@@ -61,13 +61,11 @@ fn reveal(app: &mut PhotocraftApp, path: &std::path::Path) {
 }
 
 /// The links of the Home rail: Home, which leaves Home for the open documents, then Learn and the community pages.
-fn links() -> [StartLink; 5] {
+fn links() -> [StartLink; 3] {
     [
         StartLink::command(tl!("Home"), Some(IconId::new("home")), "window.home"),
         StartLink::url(tl!("Learn"), Some(IconId::new("sparkles")), crate::links::TUTORIALS),
         StartLink::url(tl!("Website"), Some(IconId::new("link")), crate::links::APP_PAGE),
-        StartLink::url(tl!("GitHub Discussions"), Some(IconId::new("globe")), crate::links::DISCORD),
-        StartLink::url(tl!("GitHub"), Some(IconId::new("globe")), crate::links::GITHUB),
     ]
 }
 

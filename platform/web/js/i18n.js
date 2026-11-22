@@ -2,7 +2,7 @@
 const D = {
   hi: {
     nav_tools: "टूल्स", magic_link: "ईमेल लिंक से लॉगिन", app_name: "तूलिका", tagline: "आपका अपना रचनात्मक ऐप सूट",
-    nav_home: "होम", nav_projects: "प्रोजेक्ट", nav_templates: "टेम्पलेट", nav_brand: "ब्रांड किट", nav_downloads: "डाउनलोड", nav_settings: "सेटिंग",
+    nav_home: "होम", nav_projects: "प्रोजेक्ट", nav_templates: "टेम्पलेट", nav_brand: "ब्रांड किट", nav_downloads: "डाउनलोड", nav_settings: "सेटिंग", nav_admin: "यूज़र और मंज़ूरी",
     hello: "नमस्ते", hello_sub: "आज क्या बनाना है?", new_project: "नया प्रोजेक्ट", create: "बनाएँ", cancel: "रद्द करें", save: "सेव करें", delete: "हटाएँ", rename: "नाम बदलें", open_app: "ऐप खोलें", download: "डाउनलोड", upload: "फ़ाइल अपलोड", duplicate: "कॉपी बनाएँ",
     recent: "हाल के प्रोजेक्ट", all_projects: "सभी प्रोजेक्ट", see_all: "सब देखें", apps: "ऐप", search_ph: "प्रोजेक्ट खोजें…  ( / )", sort_updated: "हाल में बदले", sort_name: "नाम", sort_size: "साइज़", sort_created: "बनाए गए",
     all: "सभी", favorites: "पसंदीदा", empty_projects: "अभी कोई प्रोजेक्ट नहीं है", empty_projects_sub: "ऊपर 'नया प्रोजेक्ट' दबाइए, या कोई फ़ाइल यहाँ खींचकर छोड़िए।", empty_search: "इस खोज में कुछ नहीं मिला",
@@ -22,7 +22,7 @@ const D = {
   },
   en: {
     nav_tools: "Tools", magic_link: "Email me a login link", app_name: "Tulika", tagline: "Your own creative app suite",
-    nav_home: "Home", nav_projects: "Projects", nav_templates: "Templates", nav_brand: "Brand kits", nav_downloads: "Downloads", nav_settings: "Settings",
+    nav_home: "Home", nav_projects: "Projects", nav_templates: "Templates", nav_brand: "Brand kits", nav_downloads: "Downloads", nav_settings: "Settings", nav_admin: "Users & approval",
     hello: "Hello", hello_sub: "What will you create today?", new_project: "New project", create: "Create", cancel: "Cancel", save: "Save", delete: "Delete", rename: "Rename", open_app: "Open app", download: "Download", upload: "Upload file", duplicate: "Duplicate",
     recent: "Recent projects", all_projects: "All projects", see_all: "See all", apps: "Apps", search_ph: "Search projects…  ( / )", sort_updated: "Recently updated", sort_name: "Name", sort_size: "Size", sort_created: "Created",
     all: "All", favorites: "Favorites", empty_projects: "No projects yet", empty_projects_sub: "Press “New project”, or drag a file onto this page.", empty_search: "Nothing matches this search",

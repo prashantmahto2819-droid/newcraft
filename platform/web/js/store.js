@@ -12,6 +12,8 @@ class DemoStore {
   _save() { try { localStorage.setItem("tulika-demo", JSON.stringify(this.db)); } catch { throw new Error("storage full"); } }
   async init() { return { user: { email: "demo@local", id: "demo" } }; }
   onAuth() {} async signIn() {} async signUp() {} async signOut() {} async resetPassword() {} async magicLink() {}
+  async access() { return { ok: true, status: "approved", is_admin: false, plan: "demo", valid_until: null }; }
+  async adminUsers() { return []; } async adminSet() {}
   async listProjects() { return [...this.db.projects]; }
   async createProject({ app, name, meta = {}, file }) {
     const p = { id: uid(), app, name: name || "", file_name: file?.name || null, size_bytes: file?.size || 0, favorite: false, meta, created_at: now(), updated_at: now() };
@@ -48,6 +50,17 @@ class CloudStore {
   async resetPassword(email) { const { error } = await this.sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); if (error) throw error; }
   async magicLink(email) { const { error } = await this.sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } }); if (error) throw error; }
   async _uid() { return (await this.sb.auth.getUser()).data.user.id; }
+  // access control (migration 0003): a new account is "pending" until an admin approves it; a plan may carry an end date
+  async access() {
+    const { data, error } = await this.sb.from("profiles").select("status,is_admin,plan,valid_until").eq("id", await this._uid()).maybeSingle();
+    if (error) throw error; const p = data || { status: "pending", is_admin: false, plan: "free", valid_until: null };
+    const expired = !!p.valid_until && new Date(p.valid_until) <= new Date();
+    return { ...p, expired, ok: p.status === "approved" && !expired };
+  }
+  async adminUsers() { const { data, error } = await this.sb.rpc("admin_list_users"); if (error) throw error; return data || []; }
+  async adminSet(id, { status, plan = null, valid_until = null, make_admin = null }) {
+    const { data, error } = await this.sb.rpc("admin_set_access", { target: id, new_status: status, new_plan: plan, new_valid_until: valid_until, make_admin }); if (error) throw error; return data;
+  }
   async listProjects() {
     const { data, error } = await this.sb.from("projects").select("id,app,name,file_path,size_bytes,favorite,meta,created_at,updated_at").order("updated_at", { ascending: false }).limit(500);
     if (error) throw error; return data.map((p) => ({ ...p, file_name: p.file_path ? p.file_path.split("/").pop() : null, meta: p.meta || {} }));

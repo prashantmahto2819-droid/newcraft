@@ -9,16 +9,17 @@ srv = http.server.ThreadingHTTPServer(("127.0.0.1", 8766), functools.partial(Q, 
 U = "http://127.0.0.1:8766/"; fails = []
 def ok(c, m): print(("PASS " if c else "FAIL ") + m); (not c) and fails.append(m)
 MOCK = """
-export function createClient(){ const rows={projects:[],brand_kits:[]}; let session=null; const files={};
+export function createClient(){ const rows={projects:[],brand_kits:[],profiles:[]}; let session=null; const files={};
  const q=(t)=>{ let f=null,patch=null,ins=null,del=false; const o={select(){return o},order(){return o},limit(){return o},eq(c,v){f=[c,v];return o},
   insert(r){ins=r;return o},update(p){patch=p;return o},delete(){del=true;return o},
-  single(){return o.then(r=>({data:Array.isArray(r.data)?r.data[0]:r.data,error:null}))},
+  single(){return o.then(r=>({data:Array.isArray(r.data)?r.data[0]:r.data,error:null}))},maybeSingle(){return o.single()},
   then(res){ let d; if(ins){const r={id:'id'+Math.random(),created_at:new Date().toISOString(),updated_at:new Date().toISOString(),favorite:false,meta:{},size_bytes:0,file_path:null,...ins};rows[t].unshift(r);d=[r]}
    else if(del){rows[t]=rows[t].filter(r=>!f||r[f[0]]!==f[1]);d=[]}
    else{ let l=rows[t].filter(r=>!f||r[f[0]]===f[1]); if(patch)l.forEach(r=>Object.assign(r,patch)); d=l }
    return Promise.resolve({data:d,error:null}).then(res)}}; return o};
  return {auth:{getSession:async()=>({data:{session}}),getUser:async()=>({data:{user:{id:'u1',email:'a@b.c'}}}),onAuthStateChange(cb){window.__authcb=cb},
-  signInWithPassword:async({email})=>{session={user:{id:'u1',email}};window.__authcb&&window.__authcb('SIGNED_IN',session);return{error:null}},signOut:async()=>{session=null;window.__authcb&&window.__authcb('SIGNED_OUT',null)}},
+  signInWithPassword:async({email})=>{session={user:{id:'u1',email}};const pend=email.startsWith('pending');rows.profiles=[{id:'u1',email,status:pend?'pending':'approved',is_admin:!pend,plan:'free',valid_until:null,created_at:new Date().toISOString()},{id:'u2',email:'new@b.c',status:'pending',is_admin:false,plan:'free',valid_until:null,created_at:new Date().toISOString()}];window.__authcb&&window.__authcb('SIGNED_IN',session);return{error:null}},signOut:async()=>{session=null;window.__authcb&&window.__authcb('SIGNED_OUT',null)}},
+  rpc:async(fn,a)=>{ if(fn==='admin_list_users')return{data:rows.profiles,error:null}; const r=rows.profiles.find(x=>x.id===a.target); Object.assign(r,{status:a.new_status,plan:a.new_plan||r.plan,valid_until:a.new_valid_until}); return{data:r,error:null} },
   from:q, storage:{from:()=>({upload:async(p,f)=>{files[p]=f;return{error:null}},download:async(p)=>({data:files[p],error:null}),remove:async()=>({})})}} }
 """
 with sync_playwright() as p:
@@ -257,6 +258,15 @@ with sync_playwright() as p:
     c.click("a.primary,button.primary.lg") if c.locator("button.primary.lg").count() else None
     c.wait_for_selector(".modal"); c.click(".modal-foot .primary"); c.wait_for_timeout(300); c.screenshot(path=f"{OUT}/cloud_home_mobile.png")
     c.goto(U + "#/projects"); c.wait_for_timeout(300); ok(c.locator(".pcard").count() == 1, "cloud project created and listed")
+    # ---- access control: admin approves a pending account; a pending account only sees the waiting screen
+    c.goto(U + "#/admin"); c.wait_for_selector(".adminrow"); ok(c.locator(".adminrow").count() == 2 and c.locator(".adminrow[data-status=pending]").count() == 1, "admin page lists accounts with one pending")
+    c.locator(".adminrow[data-status=pending] button.primary").click(); c.wait_for_timeout(400); ok(c.locator(".adminrow[data-status=pending]").count() == 0, "admin approves a pending account")
+    c2 = b.new_page(viewport={"width": 390, "height": 780}); c2.on("pageerror", lambda e: errs.append(str(e)))
+    c2.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))
+    c2.route("https://esm.sh/**", lambda r: r.fulfill(content_type="text/javascript", body=MOCK))
+    c2.goto(U); c2.wait_for_selector(".login"); c2.fill("input[type=email]", "pending@b.c"); c2.fill("input[type=password]", "secret12"); c2.click(".login .primary"); c2.wait_for_selector("#waiting")
+    ok(c2.locator(".tabbar").count() == 0 and c2.locator(".sidebar").count() == 0, "pending account sees only the waiting screen")
+    c2.goto(U + "#/projects"); c2.wait_for_timeout(300); ok(c2.locator(".pcard").count() == 0 and c2.locator("#main").count() == 0, "pending account cannot open pages by URL")
     b.close()
 bad = [e for e in errs if "esm.sh" not in e]; ok(not bad, "no page errors " + str(bad[:3]))
 sys.exit(1 if fails else 0)

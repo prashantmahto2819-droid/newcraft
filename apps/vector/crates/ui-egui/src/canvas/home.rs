@@ -61,12 +61,7 @@ fn home_content(app: &mut VectorcraftApp, ui: &mut Ui) {
             }
         }
     });
-    ui.add_space(28.0);
-    ui.vertical_centered(|ui| {
-        ui.label(egui::RichText::new(tl!("Community")).font(theme::semibold(14.0)).color(t.text));
-        ui.add_space(10.0);
-        crate::community::links_centered(app, ui);
-    });
+    // Tulika: no community links section on Home.
 }
 
 /// The id of the Home screen's Quick skill guide card.
