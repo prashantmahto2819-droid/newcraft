@@ -523,6 +523,11 @@ fn main() -> std::process::ExitCode {
     let min_frame = presentation::min_frame_interval(&requested_surface);
     #[cfg(not(feature = "wgpu"))]
     let min_frame = None;
+    // Tulika: this computer must be linked to an approved account (and within its plan) before the
+    // window opens; see platform/desktop/tulika-license.
+    if !tulika_license::ensure("Tulika Vector") {
+        return std::process::ExitCode::SUCCESS;
+    }
     // A panic that ends the window (egui-wgpu's own, #502) is caught here: never a crash.
     let run = |options: eframe::NativeOptions, app_creator: eframe::AppCreator<'_>| {
         #[cfg(target_os = "linux")]

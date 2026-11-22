@@ -83,3 +83,4 @@ frame, color, format (.fcproj), text, time, golden, testkit.
 - .github/web-build.request — edit + push to start web.yml for the listed apps.
 - platform/web/vendor/fonts/list.json — font files Film web loads at start through window.filmcraft.addFont.
 - platform/web/js/views/admin.js — admin page (users, approval, plans); platform/supabase/migrations/0003_access_control.sql — access rules.
+- platform/desktop/tulika-license — desktop sign-in/device licence crate used by all four desktop apps; .github/workflows/check.yml + .github/desktop-check.request — Windows compile check; platform/web/js/views/link.js — approve a desktop device.

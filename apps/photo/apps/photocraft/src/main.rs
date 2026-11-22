@@ -525,6 +525,11 @@ fn main() -> eframe::Result {
     // `WGPU_BACKEND` set (`plan.env`) wgpu picks the backend, so name that rather than `auto`.
     let started_renderer = plan.env.clone().unwrap_or_else(|| plan.backend.name().to_string());
     let started_note = plan.reason.clone();
+    // Tulika: this computer must be linked to an approved account (and within its plan) before the
+    // window opens; see platform/desktop/tulika-license.
+    if !tulika_license::ensure("Tulika Photo") {
+        return Ok(());
+    }
     let app_created = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let created_in_callback = app_created.clone();
     let started_sentinel = sentinel.clone();

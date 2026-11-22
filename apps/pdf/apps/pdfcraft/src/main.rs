@@ -274,6 +274,11 @@ fn main() -> eframe::Result {
         single_instance::Claim::Primary(server) => Some(server),
         single_instance::Claim::Alone => None,
     };
+    // Tulika: this computer must be linked to an approved account (and within its plan) before the
+    // window opens; see platform/desktop/tulika-license.
+    if !tulika_license::ensure("Tulika PDF") {
+        return Ok(());
+    }
     let choice = renderer_choice(std::env::var("PDFCRAFT_RENDERER").ok().as_deref());
     let launch = Launch { files, options, control_file, create_images, combine, integrated, window_controls, two_paged };
     // Finder, Open With and the Dock deliver files as Apple events, not arguments; catch the one

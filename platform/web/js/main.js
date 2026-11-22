@@ -5,7 +5,7 @@ import { importFiles, newProjectModal } from "./views/shared.js";
 import { applyTheme, getTheme, shortcutsModal } from "./views/settings.js";
 
 const ROUTES = { home: ["nav_home", "home"], projects: ["nav_projects", "folder"], templates: ["nav_templates", "grid"], brand: ["nav_brand", "palette"], tools: ["nav_tools", "wand"], downloads: ["nav_downloads", "download"], settings: ["nav_settings", "settings"] };
-const HIDDEN = { editor: ["nav_templates", "grid"], admin: ["nav_admin", "settings"] };
+const HIDDEN = { editor: ["nav_templates", "grid"], admin: ["nav_admin", "settings"], link: ["nav_link", "settings"] };
 const KEYS = { h: "home", p: "projects", t: "templates", b: "brand", x: "tools", d: "downloads", s: "settings" };
 const ctx = { store: null, user: null, projects: [], refresh, rerender, relayout };
 let root, main, route = "home";

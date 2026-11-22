@@ -163,6 +163,11 @@ fn main() -> eframe::Result {
     if graphics.mode() == graphics::Mode::Default {
         register_gpu_frame_renderer();
     }
+    // Tulika: this computer must be linked to an approved account (and within its plan) before the
+    // window opens; see platform/desktop/tulika-license.
+    if !tulika_license::ensure("Tulika Film") {
+        return Ok(());
+    }
     // A panic in a Tulika Film started again for it saved the next mode for the next launch.
     let mut next_saved = false;
     let started = loop {

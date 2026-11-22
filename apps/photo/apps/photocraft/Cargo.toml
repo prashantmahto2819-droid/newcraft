@@ -16,6 +16,8 @@ heif = ["photocraft-codecs/heif"]
 workspace = true
 
 [dependencies]
+# Tulika: sign-in and device licence check before the window opens (platform/desktop/tulika-license).
+tulika-license = { path = "../../../../platform/desktop/tulika-license" }
 photocraft-doc = { workspace = true }
 photocraft-color = { workspace = true }
 photocraft-raster = { workspace = true }

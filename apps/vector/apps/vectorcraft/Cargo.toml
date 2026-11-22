@@ -15,6 +15,8 @@ wgpu = ["eframe/wgpu", "dep:winsafe"]
 accessibility = ["eframe/accesskit"]
 
 [dependencies]
+# Tulika: sign-in and device licence check before the window opens (platform/desktop/tulika-license).
+tulika-license = { path = "../../../../platform/desktop/tulika-license" }
 vectorcraft-engine = { workspace = true, features = ["bundled-fonts", "heif"] }
 vectorcraft-ui-egui = { workspace = true }
 vectorcraft-text = { workspace = true }

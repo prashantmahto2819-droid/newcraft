@@ -18,6 +18,8 @@ whisper = ["filmcraft-engine/whisper", "filmcraft-engine/speech-download"]
 neural-voices = ["filmcraft-engine/neural-voices"]
 
 [dependencies]
+# Tulika: sign-in and device licence check before the window opens (platform/desktop/tulika-license).
+tulika-license = { path = "../../../../platform/desktop/tulika-license" }
 craft-control-protocol = { workspace = true }
 filmcraft-engine = { workspace = true }
 filmcraft-export = { workspace = true }

@@ -14,7 +14,7 @@ class DemoStore {
   onAuth() {} async signIn() {} async signUp() {} async signOut() {} async resetPassword() {} async magicLink() {}
   async access() { return { ok: true, status: "approved", is_admin: false, plan: "demo", valid_until: null }; }
   async adminUsers() { return []; } async adminSet() {}
-  async registerDevice() { return { ok: true, devices: 1, max_devices: 1 }; } async myDevices() { return []; } async removeDevice() {} async adminDevices() { return []; } async adminMaxDevices() {}
+  async registerDevice() { return { ok: true, devices: 1, max_devices: 1 }; } async myDevices() { return []; } async removeDevice() {} async adminDevices() { return []; } async adminMaxDevices() {} async linkDevice() { return { ok: false, reason: "not_found" }; }
   async listProjects() { return [...this.db.projects]; }
   async createProject({ app, name, meta = {}, file }) {
     const p = { id: uid(), app, name: name || "", file_name: file?.name || null, size_bytes: file?.size || 0, favorite: false, meta, created_at: now(), updated_at: now() };
@@ -66,6 +66,7 @@ class CloudStore {
   async myDevices() { const { data, error } = await this.sb.from("devices").select("id,device_id,name,platform,last_seen").order("last_seen", { ascending: false }); if (error) throw error; return (data || []).map((d) => ({ ...d, current: d.device_id === deviceId() })); }
   async removeDevice(id) { const { error } = await this.sb.rpc("remove_device", { p_id: id }); if (error) throw error; }
   async adminDevices() { const { data, error } = await this.sb.rpc("admin_list_devices"); if (error) throw error; return data || []; }
+  async linkDevice(code) { const { data, error } = await this.sb.rpc("device_link_approve", { p_code: code }); if (error) throw error; return data; }
   async adminMaxDevices(id, n) { const { error } = await this.sb.rpc("admin_set_max_devices", { target: id, n }); if (error) throw error; }
   async adminSet(id, { status, plan = null, valid_until = null, make_admin = null }) {
     const { data, error } = await this.sb.rpc("admin_set_access", { target: id, new_status: status, new_plan: plan, new_valid_until: valid_until, make_admin }); if (error) throw error; return data;
