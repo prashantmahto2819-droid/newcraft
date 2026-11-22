@@ -31,7 +31,7 @@ export async function render(ctx) {
     const devbox = h("div.admindevs", h("label.fld", h("span", L(`डिवाइस: ${mine.length} / सीमा`, `Devices: ${mine.length} / limit`)), maxd),
       mine.map((d) => h("span.chip", `${d.name || d.platform || "device"} · ${dateFmt(d.last_seen)} `, h("button.link", { title: L("यह डिवाइस हटाएँ", "Remove this device"), onclick: async () => { try { await ctx.store.removeDevice(d.id); ctx.rerender(); } catch (er) { toast((er && er.message) || "error", "err"); } } }, "✕"))));
     list.append(h("div.card.adminrow", { "data-status": u.status },
-      h("div.adminwho", h("b", u.email || u.display_name || u.id), h("small", `${L(...STATUS[u.status])}${u.is_admin ? " · Admin" : ""} · ${dateFmt(u.created_at)}`)),
+      h("div.adminwho", h("b", u.email || u.display_name || u.id), h("small", [u.display_name, u.phone].filter(Boolean).join(" · ") || L("मोबाइल नंबर नहीं दिया", "no mobile number")), h("small", `${L(...STATUS[u.status])}${u.is_admin ? " · Admin" : ""} · ${dateFmt(u.created_at)}`)),
       h("label.fld", h("span", L("प्लान", "Plan")), plan), h("label.fld", h("span", L("कब तक मान्य (खाली = हमेशा)", "Valid until (empty = always)")), date),
       h("div.btnrow",
         u.status !== "approved" ? h("button.primary", { onclick: set(u, { status: "approved" }) }, L("मंज़ूर करें", "Approve")) : null,

@@ -205,3 +205,8 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 - check.yml run #1 green: licence crate tests pass on Windows and Linux; `cargo check -p filmcraft` passes on Windows. Request 2: vector, photo, pdf.
 - check.yml run #2 green: vector, photo and pdf desktop apps also compile on Windows with the licence check. Nothing has been run on a real Windows PC yet; 0005 still not applied.
 - User on a phone could not find the admin page (the link was only in the desktop sidebar). Settings now has an "Account, plan and devices" card: plan and validity, "Users & approval" button for admins, "Link a desktop app", and the account's devices with Remove. The GitHub button was removed from Settings ▸ About (licence notice kept). Tests 111 PASS; "palette has 5 swatches" fails now and then (flaky, unrelated). tulika.vividbrandify.com is live (user screenshot).
+
+## 2026-11-22 (afternoon) — Sign-up with name and mobile number
+- **Applied to live DB (`0006_signup_name_phone.sql`):** `profiles.phone` (unique when set, stored as +91XXXXXXXXXX / +countrycode), `normalize_phone()`, `handle_new_user()` now copies `name` and `phone` from the sign-up metadata, RPCs `phone_available()` (anon) and `set_my_contact()`.
+- **Dashboard:** "Create account" opens its own short form (name, mobile, email, password) with checks and a clear "confirm your email, then wait for approval" screen; Settings card lets an existing account add name + number; admin page shows name and number. Tests 115 PASS (palette test made to wait for the swatches).
+- WhatsApp OTP login through Vivid Relay is NOT built; only the number is collected. A number is not verified at sign-up.

@@ -18,7 +18,22 @@ function accessCard(ctx) {
   return h("section.card", { id: "accesscard" }, h("div.card-head", h("h2", hi ? "खाता, प्लान और डिवाइस" : "Account, plan and devices")),
     h("p.sub", `${hi ? "प्लान" : "Plan"}: ${a.plan || "free"}${a.valid_until ? ` · ${hi ? "मान्य" : "valid until"} ${String(a.valid_until).slice(0, 10)}` : ""}${ctx.devices?.max_devices ? ` · ${hi ? "डिवाइस" : "devices"} ${ctx.devices.devices}/${a.is_admin ? "∞" : ctx.devices.max_devices}` : ""}`),
     h("div.btnrow", a.is_admin ? h("a.primary", { id: "open-admin", href: "#/admin" }, hi ? "यूज़र और मंज़ूरी" : "Users & approval") : null,
-      h("a.ghost", { href: "#/link" }, hi ? "डेस्कटॉप ऐप जोड़ें" : "Link a desktop app")), list);
+      h("a.ghost", { href: "#/link" }, hi ? "डेस्कटॉप ऐप जोड़ें" : "Link a desktop app")), contactRow(ctx, hi), list);
+}
+
+// Name and mobile number (asked at sign-up; older accounts can add them here).
+function contactRow(ctx, hi) {
+  const a = ctx.access || {};
+  const name = h("input", { id: "my-name", value: a.display_name || "", "aria-label": hi ? "नाम" : "Name" });
+  const phone = h("input", { id: "my-phone", type: "tel", value: a.phone || "", placeholder: "98765 43210", "aria-label": hi ? "मोबाइल नंबर" : "Mobile number" });
+  const save = async () => {
+    try {
+      const r = await ctx.store.setContact(name.value, phone.value);
+      if (r && r.ok === false) return toast(r.reason === "phone_taken" ? (hi ? "यह नंबर किसी और खाते में है।" : "This number belongs to another account.") : (hi ? "सही मोबाइल नंबर लिखिए।" : "Enter a valid mobile number."), "err");
+      ctx.access = { ...a, display_name: name.value, phone: (r && r.phone) || phone.value }; toast(hi ? "सेव हो गया" : "Saved");
+    } catch (e) { toast(e.message || t("error"), "err"); }
+  };
+  return h("div.grid2", h("label.fld", h("span", hi ? "नाम" : "Name"), name), h("label.fld", h("span", hi ? "मोबाइल नंबर (WhatsApp)" : "Mobile number (WhatsApp)"), phone), h("button.ghost", { onclick: save }, hi ? "नाम और नंबर सेव करें" : "Save name and number"));
 }
 
 export async function render(ctx) {

@@ -17,9 +17,9 @@ export function createClient(){ const rows={projects:[],brand_kits:[],profiles:[
    else if(del){rows[t]=rows[t].filter(r=>!f||r[f[0]]!==f[1]);d=[]}
    else{ let l=rows[t].filter(r=>!f||r[f[0]]===f[1]); if(patch)l.forEach(r=>Object.assign(r,patch)); d=l }
    return Promise.resolve({data:d,error:null}).then(res)}}; return o};
- return {auth:{getSession:async()=>({data:{session}}),getUser:async()=>({data:{user:{id:'u1',email:'a@b.c'}}}),onAuthStateChange(cb){window.__authcb=cb},
+ return {auth:{signUp:async(a)=>{window.__su=a;return{data:{session:null},error:null}},getSession:async()=>({data:{session}}),getUser:async()=>({data:{user:{id:'u1',email:'a@b.c'}}}),onAuthStateChange(cb){window.__authcb=cb},
   signInWithPassword:async({email})=>{session={user:{id:'u1',email}};const pend=email.startsWith('pending');rows.profiles=[{id:'u1',email,status:pend?'pending':'approved',is_admin:!pend,plan:'free',valid_until:null,created_at:new Date().toISOString()},{id:'u2',email:'new@b.c',status:'pending',is_admin:false,plan:'free',valid_until:null,created_at:new Date().toISOString()}];window.__authcb&&window.__authcb('SIGNED_IN',session);return{error:null}},signOut:async()=>{session=null;window.__authcb&&window.__authcb('SIGNED_OUT',null)}},
-  rpc:async(fn,a)=>{ if(fn==='admin_list_users')return{data:rows.profiles,error:null}; if(fn==='admin_list_devices')return{data:rows.devices,error:null}; if(fn==='register_device'){ if(session.user.email.startsWith('limit'))return{data:{ok:false,reason:'device_limit',devices:2,max_devices:2},error:null}; if(!rows.devices.length)rows.devices.push({id:'d1',user_id:'u1',device_id:a.p_device_id,name:a.p_name,platform:'web',last_seen:new Date().toISOString()}); return{data:{ok:true,devices:1,max_devices:2},error:null} } if(fn==='remove_device'){rows.devices=rows.devices.filter(d=>d.id!==a.p_id);return{data:true,error:null}} if(fn==='admin_set_max_devices'){rows.profiles.find(x=>x.id===a.target).max_devices=a.n;return{data:a.n,error:null}} const r=rows.profiles.find(x=>x.id===a.target); Object.assign(r,{status:a.new_status,plan:a.new_plan||r.plan,valid_until:a.new_valid_until}); return{data:r,error:null} },
+  rpc:async(fn,a)=>{ if(fn==='admin_list_users')return{data:rows.profiles,error:null}; if(fn==='phone_available')return{data:!String(a.p).endsWith('0000000000'),error:null}; if(fn==='set_my_contact')return{data:{ok:true,phone:'+919876543210'},error:null}; if(fn==='admin_list_devices')return{data:rows.devices,error:null}; if(fn==='register_device'){ if(session.user.email.startsWith('limit'))return{data:{ok:false,reason:'device_limit',devices:2,max_devices:2},error:null}; if(!rows.devices.length)rows.devices.push({id:'d1',user_id:'u1',device_id:a.p_device_id,name:a.p_name,platform:'web',last_seen:new Date().toISOString()}); return{data:{ok:true,devices:1,max_devices:2},error:null} } if(fn==='remove_device'){rows.devices=rows.devices.filter(d=>d.id!==a.p_id);return{data:true,error:null}} if(fn==='admin_set_max_devices'){rows.profiles.find(x=>x.id===a.target).max_devices=a.n;return{data:a.n,error:null}} const r=rows.profiles.find(x=>x.id===a.target); Object.assign(r,{status:a.new_status,plan:a.new_plan||r.plan,valid_until:a.new_valid_until}); return{data:r,error:null} },
   from:q, storage:{from:()=>({upload:async(p,f)=>{files[p]=f;return{error:null}},download:async(p)=>({data:files[p],error:null}),remove:async()=>({})})}} }
 """
 with sync_playwright() as p:
@@ -33,7 +33,7 @@ with sync_playwright() as p:
     pg.fill("#search", "zzz"); pg.wait_for_timeout(250); ok(pg.locator(".pcard").count() == 0, "search filters")
     pg.fill("#search", ""); pg.click(".pmeta .icon-btn"); pg.click("text=नाम बदलिए") if pg.locator("text=नाम बदलिए").count() else pg.keyboard.press("Escape")
     pg.goto(U + "#/templates"); pg.wait_for_timeout(250); ok(pg.locator(".tcard").count() >= 20, "templates listed")
-    pg.goto(U + "#/brand"); pg.wait_for_timeout(250); ok(pg.locator(".swatch").count() == 5, "palette has 5 swatches")
+    pg.goto(U + "#/brand"); pg.wait_for_selector(".swatch"); pg.wait_for_timeout(250); ok(pg.locator(".swatch").count() == 5, "palette has 5 swatches")
     pg.click("text=नई किट"); pg.wait_for_selector(".modal"); pg.fill(".modal input[placeholder]", "Kit1"); pg.click(".modal-foot .primary"); pg.wait_for_timeout(300)
     ok(pg.locator(".kit").count() == 1, "brand kit saved")
     pg.keyboard.press("g"); pg.keyboard.press("d"); pg.wait_for_timeout(250); ok(pg.url.endswith("#/downloads"), "shortcut g d")
@@ -263,6 +263,18 @@ with sync_playwright() as p:
     c.goto(U + "#/admin"); c.wait_for_selector(".adminrow"); ok(c.locator(".adminrow").count() == 2 and c.locator(".adminrow[data-status=pending]").count() == 1, "admin page lists accounts with one pending")
     c.locator(".adminrow[data-status=pending] button.primary").click(); c.wait_for_timeout(400); ok(c.locator(".adminrow[data-status=pending]").count() == 0, "admin approves a pending account")
     ok(c.locator(".admindevs .chip").count() == 1, "admin page shows the registered device")
+    # ---- sign-up form: name + mobile + email + password, with checks
+    s1 = b.new_page(viewport={"width": 390, "height": 780}); s1.on("pageerror", lambda e: errs.append(str(e)))
+    s1.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))
+    s1.route("https://esm.sh/**", lambda r: r.fulfill(content_type="text/javascript", body=MOCK))
+    s1.goto(U); s1.wait_for_selector(".login"); s1.click("#go-signup"); s1.wait_for_selector("#signup")
+    s1.fill("#su-name", "Ramesh Kumar"); s1.fill("#su-phone", "12345"); s1.fill("#su-email", "r@b.c"); s1.fill("#su-pass", "secret12"); s1.click("#signup .primary"); s1.wait_for_timeout(200)
+    ok(s1.locator("#su-note").inner_text() != "" and s1.locator("#su-done").count() == 0, "sign-up rejects a short mobile number")
+    s1.fill("#su-phone", "00000 00000"); s1.click("#signup .primary"); s1.wait_for_timeout(300)
+    ok(s1.locator("#su-done").count() == 0 and s1.locator("#su-note").inner_text() != "", "sign-up rejects a mobile number already in use")
+    s1.fill("#su-phone", "98765 43210"); s1.click("#signup .primary"); s1.wait_for_selector("#su-done")
+    su = s1.evaluate("() => window.__su")
+    ok(su and su["options"]["data"] == {"name": "Ramesh Kumar", "phone": "+919876543210"} and su["email"] == "r@b.c", "sign-up sends name and +91 mobile number with the account")
     c3 = b.new_page(viewport={"width": 390, "height": 780}); c3.on("pageerror", lambda e: errs.append(str(e)))
     c3.route("**/config.js", lambda r: r.fulfill(content_type="text/javascript", body='window.TULIKA_CONFIG={supabaseUrl:"https://x.supabase.co",supabaseAnonKey:"k"}'))
     c3.route("https://esm.sh/**", lambda r: r.fulfill(content_type="text/javascript", body=MOCK))

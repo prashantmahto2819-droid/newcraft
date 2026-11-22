@@ -13,7 +13,7 @@ class DemoStore {
   async init() { return { user: { email: "demo@local", id: "demo" } }; }
   onAuth() {} async signIn() {} async signUp() {} async signOut() {} async resetPassword() {} async magicLink() {}
   async access() { return { ok: true, status: "approved", is_admin: false, plan: "demo", valid_until: null }; }
-  async adminUsers() { return []; } async adminSet() {}
+  async adminUsers() { return []; } async adminSet() {} async phoneAvailable() { return true; } async setContact() { return { ok: true }; }
   async registerDevice() { return { ok: true, devices: 1, max_devices: 1 }; } async myDevices() { return []; } async removeDevice() {} async adminDevices() { return []; } async adminMaxDevices() {} async linkDevice() { return { ok: false, reason: "not_found" }; }
   async listProjects() { return [...this.db.projects]; }
   async createProject({ app, name, meta = {}, file }) {
@@ -46,14 +46,20 @@ class CloudStore {
   async init() { const { data } = await this.sb.auth.getSession(); return { user: data.session?.user || null }; }
   onAuth(cb) { this.sb.auth.onAuthStateChange((_e, s) => cb(s?.user || null)); }
   async signIn(email, password) { const { error } = await this.sb.auth.signInWithPassword({ email, password }); if (error) throw error; }
-  async signUp(email, password) { const { error } = await this.sb.auth.signUp({ email, password }); if (error) throw error; }
+  // name and phone travel as sign-up metadata; the database trigger copies them into the profile (migration 0006)
+  async signUp(email, password, { name = "", phone = "" } = {}) {
+    const { data, error } = await this.sb.auth.signUp({ email, password, options: { data: { name, phone }, emailRedirectTo: location.origin + location.pathname } }); if (error) throw error;
+    return { needsEmail: !data?.session };
+  }
+  async phoneAvailable(phone) { const { data, error } = await this.sb.rpc("phone_available", { p: phone }); if (error) throw error; return !!data; }
+  async setContact(name, phone) { const { data, error } = await this.sb.rpc("set_my_contact", { p_name: name, p_phone: phone }); if (error) throw error; return data; }
   async signOut() { await this.sb.auth.signOut(); }
   async resetPassword(email) { const { error } = await this.sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); if (error) throw error; }
   async magicLink(email) { const { error } = await this.sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } }); if (error) throw error; }
   async _uid() { return (await this.sb.auth.getUser()).data.user.id; }
   // access control (migration 0003): a new account is "pending" until an admin approves it; a plan may carry an end date
   async access() {
-    const { data, error } = await this.sb.from("profiles").select("status,is_admin,plan,valid_until").eq("id", await this._uid()).maybeSingle();
+    const { data, error } = await this.sb.from("profiles").select("status,is_admin,plan,valid_until,phone,display_name").eq("id", await this._uid()).maybeSingle();
     if (error) throw error; const p = data || { status: "pending", is_admin: false, plan: "free", valid_until: null };
     const expired = !!p.valid_until && new Date(p.valid_until) <= new Date();
     return { ...p, expired, ok: p.status === "approved" && !expired };

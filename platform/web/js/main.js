@@ -47,11 +47,51 @@ function loginView() {
     h("img", { src: "icons/mark.svg", alt: "", width: 56, height: 56 }), h("h1", t("login_title")), h("small", t("tagline")),
     h("label", t("email")), email, h("label", t("password")), pass,
     h("button.primary.wide", { type: "submit" }, t("sign_in")),
-    h("div.btnrow", h("button.ghost", { type: "button", onclick: run(() => ctx.store.signUp(email.value, pass.value), t("check_email")) }, t("sign_up")),
+    h("div.btnrow", h("button.ghost", { type: "button", id: "go-signup", onclick: () => signupView(email.value) }, t("sign_up")),
       h("button.ghost", { type: "button", onclick: run(() => ctx.store.magicLink(email.value), t("check_email")) }, t("magic_link")),
       h("button.ghost", { type: "button", onclick: run(() => ctx.store.resetPassword(email.value), t("check_email")) }, t("forgot"))),
     ctx.store.mode === "cloud" ? null : h("button.link", { type: "button", onclick: () => { try { localStorage.setItem("tulika-force-demo", "1"); } catch {} location.reload(); } }, t("try_demo"))),
     h("div", { style: { position: "fixed", top: "12px", right: "12px" } }, h("button.ghost", { onclick: () => { import("./i18n.js").then((m) => { m.setLang(getLang() === "hi" ? "en" : "hi"); loginView(); }); } }, getLang() === "hi" ? "EN" : "हिं"))));
+}
+
+// Create account: name, mobile number, email and password on one short form. The number is kept for
+// WhatsApp OTP login later; the account then waits for admin approval.
+export const cleanPhone = (v) => { let d = String(v || "").replace(/\D/g, ""); if (d.length === 11 && d[0] === "0") d = d.slice(1); return d.length === 10 ? "+91" + d : d.length >= 11 && d.length <= 15 ? "+" + d : ""; };
+function signupView(prefill = "") {
+  const hi = getLang() === "hi", L = (a, b) => (hi ? a : b);
+  const name = h("input", { id: "su-name", autocomplete: "name", "aria-label": L("पूरा नाम", "Full name"), placeholder: L("जैसे: रमेश कुमार", "e.g. Ramesh Kumar") });
+  const phone = h("input", { id: "su-phone", type: "tel", inputmode: "tel", autocomplete: "tel", "aria-label": L("मोबाइल नंबर", "Mobile number"), placeholder: "98765 43210" });
+  const email = h("input", { id: "su-email", type: "email", autocomplete: "email", "aria-label": t("email"), value: prefill });
+  const pass = h("input", { id: "su-pass", type: "password", autocomplete: "new-password", "aria-label": t("password"), minlength: 6 });
+  const note = h("p", { id: "su-note", style: { minHeight: "22px", margin: 0, color: "var(--danger, #dc2626)" } });
+  const fail = (m, el) => { note.textContent = m; el?.focus(); };
+  const submit = async (e) => {
+    e.preventDefault(); note.textContent = "";
+    const ph = cleanPhone(phone.value);
+    if (name.value.trim().length < 2) return fail(L("अपना नाम लिखिए।", "Enter your name."), name);
+    if (!ph) return fail(L("सही मोबाइल नंबर लिखिए (10 अंक)।", "Enter a valid mobile number (10 digits)."), phone);
+    if (!/^\S+@\S+\.\S+$/.test(email.value.trim())) return fail(L("सही ईमेल लिखिए।", "Enter a valid email."), email);
+    if (pass.value.length < 6) return fail(L("पासवर्ड कम से कम 6 अक्षर का रखिए।", "Use a password of at least 6 characters."), pass);
+    const btn = e.submitter; if (btn) btn.disabled = true;
+    try {
+      if (!(await ctx.store.phoneAvailable(ph))) { if (btn) btn.disabled = false; return fail(L("यह मोबाइल नंबर पहले से किसी खाते में है।", "This mobile number is already used by an account."), phone); }
+      const r = await ctx.store.signUp(email.value.trim(), pass.value, { name: name.value.trim(), phone: ph });
+      root.textContent = "";
+      root.append(h("div.login", h("div.card", { id: "su-done" }, h("img", { src: "icons/mark.svg", alt: "", width: 56, height: 56 }), h("h1", L("खाता बन गया", "Account created")),
+        h("p", { style: { textAlign: "center" } }, r && r.needsEmail === false
+          ? L("अब एडमिन की मंज़ूरी के बाद आप Tulika इस्तेमाल कर पाएँगे।", "You can use Tulika once an admin approves the account.")
+          : L("अपने ईमेल में आया लिंक खोलकर ईमेल पक्का कीजिए। उसके बाद एडमिन की मंज़ूरी मिलते ही आप Tulika इस्तेमाल कर पाएँगे।", "Open the link sent to your email to confirm it. After that you can use Tulika as soon as an admin approves the account.")),
+        h("button.primary.wide", { onclick: () => (r && r.needsEmail === false ? location.reload() : loginView()) }, t("sign_in")))));
+    } catch (er) { if (btn) btn.disabled = false; fail(er.message || t("error")); }
+  };
+  root.textContent = "";
+  root.append(h("div.login", h("form.card", { id: "signup", onsubmit: submit },
+    h("img", { src: "icons/mark.svg", alt: "", width: 56, height: 56 }), h("h1", t("sign_up")),
+    h("label", L("पूरा नाम", "Full name")), name, h("label", L("मोबाइल नंबर (WhatsApp वाला)", "Mobile number (the WhatsApp one)")), phone,
+    h("label", t("email")), email, h("label", t("password")), pass, note,
+    h("button.primary.wide", { type: "submit" }, L("खाता बनाएँ", "Create account")),
+    h("button.link", { type: "button", onclick: loginView }, L("पहले से खाता है? लॉगिन करें", "Already have an account? Sign in")))));
+  name.focus();
 }
 
 function setupGlobal() {
