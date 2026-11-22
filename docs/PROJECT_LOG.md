@@ -203,3 +203,4 @@ pdf web OK; photo Linux OK. **Not verified:** photo Windows, vector+photo macOS 
 - **`0005_desktop_device_link.sql` is NOT applied yet:** the apply call asked the owner for confirmation and timed out. Until it is applied the desktop apps cannot link (and `#/link` fails).
 - New workflow `check.yml` + `.github/desktop-check.request`: `cargo test` of the licence crate (Windows, Linux) and `cargo check` of the listed desktop apps on Windows.
 - check.yml run #1 green: licence crate tests pass on Windows and Linux; `cargo check -p filmcraft` passes on Windows. Request 2: vector, photo, pdf.
+- check.yml run #2 green: vector, photo and pdf desktop apps also compile on Windows with the licence check. Nothing has been run on a real Windows PC yet; 0005 still not applied.
